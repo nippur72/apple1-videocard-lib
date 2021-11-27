@@ -1,2 +1,6 @@
 *.lst
 *.prg
+*.klog
+*.vs
+*.dbg
+KickC/**.asm
