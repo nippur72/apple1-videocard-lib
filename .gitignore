@@ -3,4 +3,4 @@
 *.klog
 *.vs
 *.dbg
-KickC/**.asm
+*.asm

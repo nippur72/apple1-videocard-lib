@@ -36,43 +36,14 @@ const byte READ_FROM_VRAM = 0b00000000;
 
 #define TMS_WRITE_REG(a)    (*VDP_REG=(byte)(a));
 #define TMS_WRITE_DATA(a)   (*VDP_DATA=(byte)(a));
+#define TMS_READ_REG        (*VDP_REG);
 #define TMS_READ_DATA       (*VDP_DATA);
 
-// puts a character on the apple1 screen using the WOZMON routine
-void woz_putc(byte c) {
-   asm {
-      lda c
-      jsr ECHO
-   }
-}
-
-// returns to WOZMON prompt
-void woz_mon() {
-   #ifdef APPLE1
-      asm {
-         jmp WOZMON
-      }
-   #endif
-}
-
-// reads a key from the apple-1 keyboard
-byte woz_getkey() {
-   #ifdef APPLE1
-      while((unsigned byte)PEEK(KEY_CTRL)>0);
-      return PEEK(KEY_DATA) & 0x7f;
-   #else
-      byte key;
-      byte const *keyptr = &key;
-      kickasm(uses keyptr, uses GETIN) {{
-         __wait:
-         jsr GETIN
-         cmp #0
-         beq __wait
-         sta keyptr
-      }}
-      return key;
-   #endif
-}
+// status register
+#define FRAME_BIT(a)        ((a) & 0b10000000)
+#define FIVESPR_BIT(a)      ((a) & 0b01000000)
+#define COLLISION_BIT(a)    ((a) & 0b00100000)
+#define SPRITE_NUM(a)       ((a) & 0b00011111)
 
 // sets the VRAM write address on the TMS9918
 void set_vram_write_addr(word addr) {
@@ -92,6 +63,18 @@ void write_reg(byte regnum, byte val) {
    TMS_WRITE_REG(val);
    TMS_WRITE_REG((regnum & 0b00001111)|WRITE_TO_REG);
 }
+
+inline void set_color(byte col) {
+   write_reg(7, col);
+}
+
+byte SCREEN1_TABLE[8] = {
+   0x00, 0xc0, 0x05, 0x80, 0x01, 0x20, 0x00, 0x25
+};
+
+byte SCREEN2_TABLE[8] = {
+   0x02, 0xc0, 0x0e, 0xff, 0x03, 0x76, 0x03, 0x25
+};
 
 word screen1_cursor;
 
@@ -114,10 +97,6 @@ const word SCREEN1_COLOR_TABLE     = 0x2000;
 const word SCREEN1_SPRITE_PATTERNS = 0x0000;
 const word SCREEN1_SPRITE_ATTRS    = 0x1000;
 const word SCREEN1_SIZE            = (32*24);
-
-byte SCREEN1_TABLE[8] = {
-   0x00, 0xc0, 0x05, 0x80, 0x01, 0x20, 0x00, 0x25
-};
 
 // loads the Laser 500 font on the pattern table
 void SCREEN1_LOAD_FONT() {
@@ -198,9 +177,6 @@ const word SCREEN2_SPRITE_PATTERNS = 0x1800;
 const word SCREEN2_SPRITE_ATTRS    = 0x3b00;
 const word SCREEN2_SIZE            = (32*24);
 
-byte SCREEN2_TABLE[8] = {
-   0x02, 0xc0, 0x0e, 0xff, 0x03, 0x76, 0x03, 0x25
-};
 
 void SCREEN_INIT(byte *table) {
    for(byte i=0;i<8;i++) {
@@ -322,12 +298,48 @@ void prova_screen2() {
    }
 }
 
+// puts a character on the apple1 screen using the WOZMON routine
+void woz_putc(byte c) {
+   asm {
+      lda c
+      jsr ECHO
+   }
+}
+
+// returns to WOZMON prompt
+void woz_mon() {
+   #ifdef APPLE1
+      asm {
+         jmp WOZMON
+      }
+   #endif
+}
+
+// reads a key from the apple-1 keyboard
+byte woz_getkey() {
+   #ifdef APPLE1
+      while((unsigned byte)PEEK(KEY_CTRL)>0);
+      return PEEK(KEY_DATA) & 0x7f;
+   #else
+      byte key;
+      byte const *keyptr = &key;
+      kickasm(uses keyptr, uses GETIN) {{
+         __wait:
+         jsr GETIN
+         cmp #0
+         beq __wait
+         sta keyptr
+      }}
+      return key;
+   #endif
+}
+
 void main() {
    byte key = '1';
    for(;;) {
            if(key == '1')  prova_screen1();
       else if(key == '2')  prova_screen2();
-      else if(key == 0x0d) break;
+      else if(key == '0')  break;
       else woz_putc(key);
 
       key = woz_getkey();
