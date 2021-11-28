@@ -2,7 +2,7 @@ const fs = require('fs');
 
 let prg = fs.readFileSync("test_apple1.prg");
 
-//prg = prg.slice(2); // skip header
+prg = prg.slice(2); // skip header
 
 let s = appledump(prg, 0x4000);
 
