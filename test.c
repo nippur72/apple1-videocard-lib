@@ -318,7 +318,11 @@ void woz_mon() {
 // reads a key from the apple-1 keyboard
 byte woz_getkey() {
    #ifdef APPLE1
-      while((unsigned byte)PEEK(KEY_CTRL)>0);
+      asm {
+         __wait:
+         lda KEY_CTRL
+         bpl __wait
+      }
       return PEEK(KEY_DATA) & 0x7f;
    #else
       byte key;
