@@ -59,7 +59,6 @@ void set_vram_read_addr(word addr) {
 
 // writes a value to a TMS9918 register (0-7)
 void write_reg(byte regnum, byte val) {
-   // nops are not required
    TMS_WRITE_REG(val);
    TMS_WRITE_REG((regnum & 0b00001111)|WRITE_TO_REG);
 }
@@ -237,11 +236,10 @@ void screen1_square_sprites() {
    // set sprite coordinates
    set_vram_write_addr(SCREEN1_SPRITE_ATTRS);       // start writing in the sprite attribute
    for(byte i=0;i<32;i++) {
-      TMS_WRITE_DATA((6+i)*8);   // y coordinate
-      TMS_WRITE_DATA((6+i)*8);   // x coordinate
-      TMS_WRITE_DATA(0);         // name
-      TMS_WRITE_DATA(i);         // color
-      // TODO: nops here
+      TMS_WRITE_DATA((6+i)*8); NOP; NOP; NOP; NOP; // y coordinate
+      TMS_WRITE_DATA((6+i)*8); NOP; NOP; NOP; NOP; // x coordinate
+      TMS_WRITE_DATA(0);       NOP; NOP; NOP; NOP; // name
+      TMS_WRITE_DATA(i);       NOP; NOP; NOP; NOP; // color
    }
 }
 
@@ -255,11 +253,10 @@ void screen2_square_sprites() {
    // set sprite coordinates
    set_vram_write_addr(SCREEN2_SPRITE_ATTRS);       // start writing in the sprite attribute
    for(byte i=0;i<32;i++) {
-      TMS_WRITE_DATA(0);         // y coordinate
-      TMS_WRITE_DATA(0);         // x coordinate
-      TMS_WRITE_DATA(0);         // name
-      TMS_WRITE_DATA(i);         // color
-      // TODO: nops here
+      TMS_WRITE_DATA(0);      NOP; NOP; NOP; NOP; // y coordinate
+      TMS_WRITE_DATA(0);      NOP; NOP; NOP; NOP; // x coordinate
+      TMS_WRITE_DATA(0);      NOP; NOP; NOP; NOP; // name
+      TMS_WRITE_DATA(i);      NOP; NOP; NOP; NOP; // color
    }
 }
 
