@@ -34,8 +34,8 @@ const byte READ_FROM_VRAM = 0b00000000;
 
 #define NOP asm { nop }
 
-#define TMS_WRITE_REG(a)    (*VDP_REG=(byte)(a));
-#define TMS_WRITE_DATA(a)   (*VDP_DATA=(byte)(a));
+#define TMS_WRITE_REG(a)    (*VDP_REG=(byte)(a))
+#define TMS_WRITE_DATA(a)   (*VDP_DATA=(byte)(a))
 #define TMS_READ_REG        (*VDP_REG);
 #define TMS_READ_DATA       (*VDP_DATA);
 
@@ -74,6 +74,34 @@ byte SCREEN1_TABLE[8] = {
 byte SCREEN2_TABLE[8] = {
    0x02, 0xc0, 0x0e, 0xff, 0x03, 0x76, 0x03, 0x25
 };
+
+/*
+IRQ on the apple1 goes to 0
+- #pragma zp_reserve(0,1,2)
+- POKE 0,$4C (JUMP)
+- DOKE 1,address routine
+*/
+
+/*
+word tick_counts;
+
+__interrupt(hardware_all) void interrupt_handler() {
+   tick_counts++;
+}
+
+// reserve locations for the IRQ vector
+#pragma zp_reserve(0,1,2)
+
+//__address(0x0001) volatile word KERNEL_IRQ;
+
+void install_interrupt() {
+   asm { sei }
+   POKE(0,0x4C);
+   //KERNEL_IRQ = (word) &interrupt_handler;
+   // *((word *)0x0001) = (word) &interrupt_handler;
+   asm { cli }
+}
+*/
 
 word screen1_cursor;
 
@@ -217,13 +245,31 @@ void SCREEN2_PUTS(byte x, byte y, byte col, char *s) {
    }
 }
 
-void SCREEN2_PSET(byte x, byte y) {
-   static byte pow2_table[8] = { 128,64,32,16,8,4,2,1 };
-   word paddr = SCREEN2_PATTERN_TABLE + (word)(x & 0b11111000) + (word)(y & 0b11111000)*32 + y%8;
+#define PLOT_MODE_RESET   0
+#define PLOT_MODE_SET     1
+#define PLOT_MODE_INVERT  2
+
+byte SCREEN2_PLOT_MODE = PLOT_MODE_SET;
+
+void SCREEN2_PLOT(byte x, byte y) {   
+   byte pow2_table_reversed[8] = { 128,64,32,16,8,4,2,1 };
+   word paddr = SCREEN2_PATTERN_TABLE + (word)(x & 0b11111000) + (word)(y & 0b11111000)*32 + y%8;   
    set_vram_read_addr(paddr);
    byte data = TMS_READ_DATA;
+   byte mask = pow2_table_reversed[x%8];
    set_vram_write_addr(paddr);
-   TMS_WRITE_DATA(data|pow2_table[x%8]);
+   switch(SCREEN2_PLOT_MODE) {
+      case PLOT_MODE_RESET:
+         data &= ~mask;
+         break;
+      case PLOT_MODE_SET:
+         data |= mask;
+         break;
+      case PLOT_MODE_INVERT:
+         data ^= mask;
+         break;
+   }
+   TMS_WRITE_DATA(data);
 }
 
 void screen1_square_sprites() {
@@ -275,6 +321,162 @@ void prova_screen1() {
    screen1_square_sprites();
 }
 
+byte amiga_data[612] = {
+   107,35,130,35,
+   130,35,130,57,
+   130,57,185,57,
+   185,57,185,35,
+   185,35,197,35,
+   197,35,208,46,
+   208,46,208,118,
+   208,118,199,118,
+   199,118,199,80,
+   199,80,136,80,
+   136,80,134,78,
+   134,78,125,78,
+   125,78,124,80,
+   124,80,117,80,
+   117,80,117,89,
+   117,89,107,96,
+   107,96,107,35,
+   105,96,105,34,
+   105,34,198,34,
+   198,34,210,46,
+   210,46,210,119,
+   210,119,158,119,
+   158,119,158,124,
+   158,124,154,132,
+   154,132,150,137,
+   150,137,146,140,
+   146,140,140,149,
+   140,149,132,153,
+   132,153,132,164,
+   132,164,82,164,
+   82,164,82,133,
+   82,133,81,133,
+   81,133,81,105,
+   81,105,85,99,
+   85,99,92,93,
+   92,93,93,89,
+   93,89,97,82,
+   97,82,102,79,
+   102,79,105,78,
+   105,78,105,78,
+   105,78,102,80,
+   102,80,98,82,
+   98,82,94,89,
+   94,89,93,93,
+   93,93,86,99,
+   86,99,82,105,
+   82,105,82,132,
+   82,132,83,133,
+   83,133,83,163,
+   83,163,112,163,
+   112,163,112,142,
+   112,142,120,142,
+   120,142,124,138,
+   124,138,124,119,
+   124,119,122,116,
+   122,116,122,106,
+   122,106,137,93,
+   137,93,137,81,
+   137,81,134,79,
+   134,79,131,79,
+   131,79,134,82,
+   134,82,134,89,
+   134,89,133,90,
+   133,90,126,90,
+   126,90,123,87,
+   123,87,114,94,
+   114,94,102,100,
+   102,100,90,109,
+   90,109,90,108,
+   90,108,102,99,
+   102,99,98,98,
+   98,98,95,95,
+   95,95,98,97,
+   98,97,102,98,
+   102,98,105,96,
+   122,85,124,78,
+   124,78,132,79,
+   132,79,133,82,
+   133,82,133,89,
+   133,89,126,89,
+   126,89,122,85,
+   123,116,123,106,
+   123,106,138,93,
+   138,93,138,81,
+   138,81,197,81,
+   197,81,197,118,
+   197,118,124,118,
+   124,118,123,114,
+   132,35,183,35,
+   183,35,183,56,
+   183,56,132,56,
+   132,56,132,35,
+   168,38,179,38,
+   179,38,179,52,
+   179,52,168,52,
+   168,52,168,38,
+   170,39,177,39,
+   177,39,177,51,
+   177,51,170,51,
+   170,51,170,39,
+   119,81,122,81,
+   122,81,122,83,
+   122,83,119,87,
+   119,87,119,81,
+   113,163,113,143,
+   113,143,120,143,
+   120,143,125,138,
+   125,138,125,129,
+   125,129,129,131,
+   129,131,137,131,
+   137,131,137,133,
+   137,133,141,138,
+   141,138,145,138,
+   145,138,145,140,
+   145,140,139,149,
+   139,149,131,152,
+   131,152,131,163,
+   131,163,113,163,
+   125,119,125,124,
+   125,124,130,121,
+   130,121,125,119,
+   129,122,125,124,
+   125,124,125,119,
+   125,119,146,119,
+   146,119,136,129,
+   136,129,135,129,
+   135,129,137,127,
+   137,127,132,122,
+   132,122,129,122,
+   150,119,157,119,
+   157,119,157,124,
+   157,124,153,132,
+   153,132,150,136,
+   150,136,145,137,
+   145,137,142,137,
+   142,137,139,133,
+   139,133,139,130,
+   139,130,150,119,
+   140,130,140,133,
+   140,133,142,136,
+   142,136,144,136,
+   144,136,148,135,
+   148,135,149,132,
+   149,132,145,129,
+   145,129,140,130,
+   126,128,134,130,
+   134,130,136,127,
+   136,127,132,123,
+   132,123,129,123,
+   129,123,126,125,
+   126,125,126,128,
+   198,35,209,46,
+   209,46,209,118
+};
+
 void prova_screen2() {
    SCREEN_INIT(SCREEN2_TABLE);
    SCREEN2_FILL();
@@ -288,11 +490,37 @@ void prova_screen2() {
       SCREEN2_PUTS(5,(byte)(6+i),(byte)(((15-i)<<4)+i),"     SCREEN 2     ");
    }
 
-   for(byte i=0;i<192;i++) {
-      SCREEN2_PSET((byte)i  ,(byte)i/2);
-      SCREEN2_PSET((byte)i  ,(byte)i);
-      SCREEN2_PSET((byte)i/2,(byte)i);
+   vti_line(18, 45,232,187);
+   vti_line(18,187,232, 45);
+
+   SCREEN2_PLOT_MODE = PLOT_MODE_RESET;
+
+   vti_line(18+5, 45,232+5,187);
+   vti_line(18+5,187,232+5, 45);
+
+   SCREEN2_PLOT_MODE = PLOT_MODE_INVERT;
+
+   vti_line(18+5+5, 45,232+5+5,187);
+   vti_line(18+5+5,187,232+5+5, 45);
+
+   SCREEN2_PLOT_MODE = PLOT_MODE_SET;
+
+   //vti_ellipse_rect(7,9,202,167);
+}
+
+void prova_screen3() {
+   SCREEN_INIT(SCREEN2_TABLE);
+   SCREEN2_FILL();
+   screen2_square_sprites();
+
+   SCREEN2_PUTS(0,0,0x1F,"*** P-LAB  VIDEO CARD SYSTEM ***");
+   SCREEN2_PUTS(0,2,0x1F,"16K VRAM BYTES FREE");
+   SCREEN2_PUTS(0,4,0x1F,"READY.");
+
+   for(word p=0;p<612;p+=4) {
+      vti_line(amiga_data[p],amiga_data[p+1],amiga_data[p+2],amiga_data[p+3]);
    }
+   SCREEN2_PUTS(18,12,0x4F,"APPLE1");   
 }
 
 // puts a character on the apple1 screen using the WOZMON routine
@@ -335,11 +563,82 @@ byte woz_getkey() {
    #endif
 }
 
+signed int vti_abs(signed int x) {
+    return x < 0 ? -x : x;
+}
+
+// http://members.chello.at/~easyfilter/bresenham.html
+void vti_line(byte _x0, byte _y0, byte _x1, byte _y1) {
+
+   signed int x0 = (signed int) _x0;
+   signed int x1 = (signed int) _x1;   
+   signed int y0 = (signed int) _y0;
+   signed int y1 = (signed int) _y1;
+
+   signed int dx =  vti_abs(x1-x0);
+   signed int dy = -vti_abs(y1-y0);
+   signed int err = dx+dy; /* error value e_xy */
+
+   bool ix = x0<x1;
+   bool iy = y0<y1;
+   signed int e2;
+
+   for(;;){  /* loop */
+      SCREEN2_PLOT((byte)x0, (byte)y0);
+      if (x0==x1 && y0==y1) break;
+      e2 = err<<1;//2*err;
+      if (e2 >= dy) { err += dy; if(ix) ++x0; else --x0; } /* e_xy+e_x > 0 */
+      if (e2 <= dx) { err += dx; if(iy) ++y0; else --y0; } /* e_xy+e_y < 0 */
+   }
+}
+
+/*
+// http://members.chello.at/~easyfilter/bresenham.html
+void vti_ellipse_rect(byte _x0, byte _y0, byte _x1, byte _y1)
+{
+    //unsigned int x0,y0,x1,y1;
+    signed int x0 = (signed int) _x0;
+    signed int y0 = (signed int) _y0;
+    signed int x1 = (signed int) _x1;
+    signed int y1 = (signed int) _y1;
+
+    signed int a = vti_abs(x1-x0), b = vti_abs(y1-y0);
+    signed int b1 = b&1; // values of diameter 
+    signed int dx = 4*(1-a)*b*b, dy = 4*(b1+1)*a*a; // error increment 
+    signed int err = dx+dy+b1*a*a, e2; // error of 1.step
+
+    if (x0 > x1) { x0 = x1; x1 += a; } // if called with swapped points 
+    if (y0 > y1) y0 = y1; // .. exchange them 
+    y0 += (b+1)/2; y1 = y0-b1;   // starting pixel 
+    a *= 8*a; b1 = 8*b*b;
+
+    do {
+        SCREEN2_PLOT((byte) x1, (byte) y0); //   I. Quadrant 
+        SCREEN2_PLOT((byte) x0, (byte) y0); //  II. Quadrant 
+        SCREEN2_PLOT((byte) x0, (byte) y1); // III. Quadrant 
+        SCREEN2_PLOT((byte) x1, (byte) y1); //  IV. Quadrant 
+        e2 = 2*err;
+        if (e2 <= dy) { y0++; y1--; err += dy += a; }  // y step 
+        if (e2 >= dx || 2*err > dy) { x0++; x1--; err += dx += b1; } // x step 
+    } while (x0 <= x1);
+   
+    while (y0-y1 < b) {  // too early stop of flat ellipses a=1 
+        SCREEN2_PLOT((byte) x0-1, (byte) (y0)); // -> finish tip of ellipse 
+        SCREEN2_PLOT((byte) x1+1, (byte) (y0++));
+        SCREEN2_PLOT((byte) x0-1, (byte) (y1));
+        SCREEN2_PLOT((byte) x1+1, (byte) (y1--));
+    }
+}
+*/
+
 void main() {
+   //install_interrupt();
+
    byte key = '1';
    for(;;) {
            if(key == '1')  prova_screen1();
       else if(key == '2')  prova_screen2();
+      else if(key == '3')  prova_screen3();
       else if(key == '0')  break;
       else woz_putc(key);
 
