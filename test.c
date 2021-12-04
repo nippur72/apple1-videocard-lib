@@ -82,27 +82,6 @@ IRQ on the apple1 goes to 0
 - DOKE 1,address routine
 */
 
-/*
-word tick_counts;
-
-__interrupt(hardware_all) void interrupt_handler() {
-   tick_counts++;
-}
-
-// reserve locations for the IRQ vector
-#pragma zp_reserve(0,1,2)
-
-//__address(0x0001) volatile word KERNEL_IRQ;
-
-void install_interrupt() {
-   asm { sei }
-   POKE(0,0x4C);
-   //KERNEL_IRQ = (word) &interrupt_handler;
-   // *((word *)0x0001) = (word) &interrupt_handler;
-   asm { cli }
-}
-*/
-
 word screen1_cursor;
 
 #include "laser500_font.ascii.c"
@@ -631,14 +610,24 @@ void vti_ellipse_rect(byte _x0, byte _y0, byte _x1, byte _y1)
 }
 */
 
+#include "interrupt.h"
+
+void prova_interrupt() {
+   // la seguente linea è un workaround temporaneo a causa di un bug di KickC
+   // fa uso della variabile tick_counts in modo che non venga ottimizzata
+   *((word *)0xFFFE) = tick_counts;
+
+   install_interrupt();
+}
+
 void main() {
-   //install_interrupt();
 
    byte key = '1';
    for(;;) {
            if(key == '1')  prova_screen1();
       else if(key == '2')  prova_screen2();
       else if(key == '3')  prova_screen3();
+      else if(key == '4')  prova_interrupt();
       else if(key == '0')  break;
       else woz_putc(key);
 
