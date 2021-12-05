@@ -6,9 +6,12 @@ inline void acknowledge_interrupt() {
    asm { lda VDP_REG };
 }
 
-volatile word tick_counts;
+export __address(0) byte IRQ_JUMP_OPCODE;
+export __address(1) word IRQ_JUMP_ADDRESS;
 
-__interrupt(hardware_all) void interrupt_handler() {
+export volatile word tick_counts;
+
+export __interrupt(hardware_all) void interrupt_handler() {
    tick_counts++;
 
    if(tick_counts == 60) {
@@ -22,8 +25,8 @@ __interrupt(hardware_all) void interrupt_handler() {
 
 void install_interrupt() {
    asm { sei };                                   // disable 6502 interrupts
-   *((byte *)0x0000) = 0x4C;                      // $4C = JUMP opcode
-   *((word *)0x0001) = (word) &interrupt_handler; // JUMP interrupt_handler
+   IRQ_JUMP_OPCODE  = 0x4C;                       // $4C = JUMP opcode
+   IRQ_JUMP_ADDRESS = (word) &interrupt_handler;  // JUMP interrupt_handler
    asm { cli };                                   // re-enable 6502 interrupts
    write_reg(1, 0xc0 | 32);                       // turn on IE bit (interrupt enable) on the TMS9918
 }

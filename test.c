@@ -615,12 +615,14 @@ void vti_ellipse_rect(byte _x0, byte _y0, byte _x1, byte _y1)
 void prova_interrupt() {
    // la seguente linea è un workaround temporaneo a causa di un bug di KickC
    // fa uso della variabile tick_counts in modo che non venga ottimizzata
-   *((word *)0xFFFE) = tick_counts;
+   //*((word *)0xFFFE) = tick_counts;
 
    install_interrupt();
 }
 
 void main() {
+
+   //word pippo = mul8(3,2);
 
    byte key = '1';
    for(;;) {
