@@ -510,6 +510,12 @@ void woz_putc(byte c) {
    }
 }
 
+// puts a 0-terminated string on the apple1 screen
+void woz_puts(byte *s) {
+   byte c;
+   while(c=*s++) woz_putc(c);
+}
+
 // returns to WOZMON prompt
 void woz_mon() {
    #ifdef APPLE1
