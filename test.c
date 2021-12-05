@@ -1,4 +1,4 @@
-// TODO verificare NOPs
+#pragma encoding(ascii)
 
 #ifdef APPLE1
    // APPLE1
