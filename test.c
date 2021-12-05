@@ -626,6 +626,42 @@ void prova_interrupt() {
    install_interrupt();
 }
 
+byte external_input = 0;
+void prova_external_input() {
+   external_input ^= 1;
+
+   if(external_input == 1) {
+      woz_puts("EXT INPUT ON\r");
+   }
+   else {
+      woz_puts("EXT INPUT OFF\r");
+   }
+
+   // fill color table with $F0
+   set_vram_write_addr(SCREEN1_COLOR_TABLE);
+   for(byte i=32;i!=0;i--) {
+      TMS_WRITE_DATA_PORT(0xA0);   // yellow on transparent
+   }
+
+   write_reg(0, 0x00 | external_input);   // write "external video input" bit
+   set_color(0);                          // transparent color
+}
+
+byte blank = 0;
+
+void prova_blank() {
+   blank ^= 64;
+
+   if(blank == 64) {
+      woz_puts("NORMAL\r");
+   }
+   else {
+      woz_puts("BLANK\r");
+   }
+
+   write_reg(1, 0x80 | blank);   // write "blank" bit
+}
+
 void main() {
 
    //word pippo = mul8(3,2);
@@ -636,6 +672,8 @@ void main() {
       else if(key == '2')  prova_screen2();
       else if(key == '3')  prova_screen3();
       else if(key == '4')  prova_interrupt();
+      else if(key == 'E')  prova_external_input();
+      else if(key == 'B')  prova_blank();
       else if(key == '0')  break;
       else woz_putc(key);
 
