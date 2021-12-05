@@ -11,8 +11,8 @@
    const word TERM_DATA = 0xd012;      // write ascii
    const word TERM_CTRL = 0xd013;      // control port
 
-   const byte *VDP_DATA = 0xC000;       // TMS9918 data port (VRAM)
-   const byte *VDP_REG  = 0xC001;       // TMS9918 register port (write) or status (read)
+   const byte *VDP_DATA = 0xCC00;       // TMS9918 data port (VRAM)
+   const byte *VDP_REG  = 0xCC01;       // TMS9918 register port (write) or status (read)
 #else
    // VIC20
    const word ECHO      = 0xFFD2;       // chrout routine in kernal rom
@@ -34,10 +34,10 @@ const byte READ_FROM_VRAM = 0b00000000;
 
 #define NOP asm { nop }
 
-#define TMS_WRITE_REG(a)    (*VDP_REG=(byte)(a))
-#define TMS_WRITE_DATA(a)   (*VDP_DATA=(byte)(a))
-#define TMS_READ_REG        (*VDP_REG);
-#define TMS_READ_DATA       (*VDP_DATA);
+#define TMS_WRITE_CTRL_PORT(a)    (*VDP_REG=(byte)(a))
+#define TMS_WRITE_DATA_PORT(a)    (*VDP_DATA=(byte)(a))
+#define TMS_READ_CTRL_PORT        (*VDP_REG);
+#define TMS_READ_DATA_PORT        (*VDP_DATA);
 
 // status register
 #define FRAME_BIT(a)        ((a) & 0b10000000)
@@ -47,20 +47,20 @@ const byte READ_FROM_VRAM = 0b00000000;
 
 // sets the VRAM write address on the TMS9918
 void set_vram_write_addr(word addr) {
-   TMS_WRITE_REG(<addr);
-   TMS_WRITE_REG((>addr & 0b00111111)|WRITE_TO_VRAM);
+   TMS_WRITE_CTRL_PORT(<addr);
+   TMS_WRITE_CTRL_PORT((>addr & 0b00111111)|WRITE_TO_VRAM);
 }
 
 // sets the VRAM read address on the TMS9918
 void set_vram_read_addr(word addr) {
-   TMS_WRITE_REG(<addr);
-   TMS_WRITE_REG((>addr & 0b00111111)|READ_FROM_VRAM);
+   TMS_WRITE_CTRL_PORT(<addr);
+   TMS_WRITE_CTRL_PORT((>addr & 0b00111111)|READ_FROM_VRAM);
 }
 
 // writes a value to a TMS9918 register (0-7)
 void write_reg(byte regnum, byte val) {
-   TMS_WRITE_REG(val);
-   TMS_WRITE_REG((regnum & 0b00001111)|WRITE_TO_REG);
+   TMS_WRITE_CTRL_PORT(val);
+   TMS_WRITE_CTRL_PORT((regnum & 0b00001111)|WRITE_TO_REG);
 }
 
 inline void set_color(byte col) {
@@ -113,21 +113,21 @@ void SCREEN1_LOAD_FONT() {
    // start writing into VRAM from space character (32..127)
    set_vram_write_addr(SCREEN1_PATTERN_TABLE+(32*8));
    for(i=768;i!=0;i--) {
-      TMS_WRITE_DATA(*source++);
+      TMS_WRITE_DATA_PORT(*source++);
    }
 
    // reverse font (32..127)
    source = FONT;
    set_vram_write_addr(SCREEN1_PATTERN_TABLE+((128+32)*8));
    for(i=768;i!=0;i--) {
-      TMS_WRITE_DATA(~(*source++));
+      TMS_WRITE_DATA_PORT(~(*source++));
    }
 }
 
 // prints character to TMS (SCREEN 1 MODE)
 void SCREEN1_PUTCHAR(byte c) {
    set_vram_write_addr(screen1_cursor++);
-   TMS_WRITE_DATA(c);
+   TMS_WRITE_DATA_PORT(c);
 }
 
 // prints 0 terminated string pointed by YA
@@ -150,19 +150,19 @@ void SCREEN1_FILL() {
    // fills name table with spaces (32)
    set_vram_write_addr(SCREEN1_NAME_TABLE);
    for(word i=SCREEN1_SIZE;i!=0;i--) {
-      TMS_WRITE_DATA(32);
+      TMS_WRITE_DATA_PORT(32);
    }
 
    // fill pattern table with 0
    set_vram_write_addr(SCREEN1_PATTERN_TABLE);
    for(word i=256*8;i!=0;i--) {
-      TMS_WRITE_DATA(0);
+      TMS_WRITE_DATA_PORT(0);
    }
 
    // fill color table with $1F
    set_vram_write_addr(SCREEN1_COLOR_TABLE);
    for(byte i=32;i!=0;i--) {
-      TMS_WRITE_DATA(0x1f);
+      TMS_WRITE_DATA_PORT(0x1f);
    }
 }
 
@@ -194,27 +194,27 @@ void SCREEN2_FILL() {
    // fills name table x3 with increasing numbers
    set_vram_write_addr(SCREEN2_NAME_TABLE);
    for(word i=0;i<SCREEN2_SIZE;i++) {
-      TMS_WRITE_DATA(i & 0xFF);
+      TMS_WRITE_DATA_PORT(i & 0xFF);
    }
 
    // fill pattern table with 0 (clear screen)
    set_vram_write_addr(SCREEN2_PATTERN_TABLE);
    for(word i=768*8;i!=0;i--) {
-      TMS_WRITE_DATA(0);
+      TMS_WRITE_DATA_PORT(0);
    }
 
    // fill color table with $1F
    set_vram_write_addr(SCREEN2_COLOR_TABLE);
    for(word i=768*8;i!=0;i--) {
-      TMS_WRITE_DATA(0x1f);
+      TMS_WRITE_DATA_PORT(0x1f);
    }
 }
 
 void SCREEN2_PUTC(byte ch, byte x, byte y, byte col) {
    byte *source = &FONT[(word)(ch-32)*8];
    word addr = x*8 + y*256;
-   set_vram_write_addr(SCREEN2_PATTERN_TABLE + addr); for(byte i=0;i<8;i++) TMS_WRITE_DATA(source[i]);
-   set_vram_write_addr(SCREEN2_COLOR_TABLE   + addr); for(byte i=0;i<8;i++) TMS_WRITE_DATA(col);
+   set_vram_write_addr(SCREEN2_PATTERN_TABLE + addr); for(byte i=0;i<8;i++) TMS_WRITE_DATA_PORT(source[i]);
+   set_vram_write_addr(SCREEN2_COLOR_TABLE   + addr); for(byte i=0;i<8;i++) TMS_WRITE_DATA_PORT(col);
 }
 
 void SCREEN2_PUTS(byte x, byte y, byte col, char *s) {
@@ -234,7 +234,7 @@ void SCREEN2_PLOT(byte x, byte y) {
    byte pow2_table_reversed[8] = { 128,64,32,16,8,4,2,1 };
    word paddr = SCREEN2_PATTERN_TABLE + (word)(x & 0b11111000) + (word)(y & 0b11111000)*32 + y%8;   
    set_vram_read_addr(paddr);
-   byte data = TMS_READ_DATA;
+   byte data = TMS_READ_DATA_PORT;
    byte mask = pow2_table_reversed[x%8];
    set_vram_write_addr(paddr);
    switch(SCREEN2_PLOT_MODE) {
@@ -248,23 +248,23 @@ void SCREEN2_PLOT(byte x, byte y) {
          data ^= mask;
          break;
    }
-   TMS_WRITE_DATA(data);
+   TMS_WRITE_DATA_PORT(data);
 }
 
 void screen1_square_sprites() {
    // fills first sprite pattern with 255
    set_vram_write_addr(SCREEN1_SPRITE_PATTERNS);    // start writing in the sprite patterns
    for(byte i=0;i<8;i++) {
-      TMS_WRITE_DATA(255);
+      TMS_WRITE_DATA_PORT(255);
    }
 
    // set sprite coordinates
    set_vram_write_addr(SCREEN1_SPRITE_ATTRS);       // start writing in the sprite attribute
    for(byte i=0;i<32;i++) {
-      TMS_WRITE_DATA((6+i)*8); NOP; NOP; NOP; NOP; // y coordinate
-      TMS_WRITE_DATA((6+i)*8); NOP; NOP; NOP; NOP; // x coordinate
-      TMS_WRITE_DATA(0);       NOP; NOP; NOP; NOP; // name
-      TMS_WRITE_DATA(i);       NOP; NOP; NOP; NOP; // color
+      TMS_WRITE_DATA_PORT((6+i)*8); NOP; NOP; NOP; NOP; // y coordinate
+      TMS_WRITE_DATA_PORT((6+i)*8); NOP; NOP; NOP; NOP; // x coordinate
+      TMS_WRITE_DATA_PORT(0);       NOP; NOP; NOP; NOP; // name
+      TMS_WRITE_DATA_PORT(i);       NOP; NOP; NOP; NOP; // color
    }
 }
 
@@ -272,16 +272,16 @@ void screen2_square_sprites() {
    // fills first sprite pattern with 255
    set_vram_write_addr(SCREEN2_SPRITE_PATTERNS);    // start writing in the sprite patterns
    for(byte i=0;i<8;i++) {
-      TMS_WRITE_DATA(0);
+      TMS_WRITE_DATA_PORT(0);
    }
 
    // set sprite coordinates
    set_vram_write_addr(SCREEN2_SPRITE_ATTRS);       // start writing in the sprite attribute
    for(byte i=0;i<32;i++) {
-      TMS_WRITE_DATA(0);      NOP; NOP; NOP; NOP; // y coordinate
-      TMS_WRITE_DATA(0);      NOP; NOP; NOP; NOP; // x coordinate
-      TMS_WRITE_DATA(0);      NOP; NOP; NOP; NOP; // name
-      TMS_WRITE_DATA(i);      NOP; NOP; NOP; NOP; // color
+      TMS_WRITE_DATA_PORT(0);      NOP; NOP; NOP; NOP; // y coordinate
+      TMS_WRITE_DATA_PORT(0);      NOP; NOP; NOP; NOP; // x coordinate
+      TMS_WRITE_DATA_PORT(0);      NOP; NOP; NOP; NOP; // name
+      TMS_WRITE_DATA_PORT(i);      NOP; NOP; NOP; NOP; // color
    }
 }
 
