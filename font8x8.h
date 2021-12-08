@@ -1,3 +1,5 @@
+// font from LASER-500 (ASCII characters only)
+
 byte FONT[768] = {
    0
 ,  0

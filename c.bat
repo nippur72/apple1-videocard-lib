@@ -6,4 +6,12 @@ copy test.prg test_vic20.prg
 @echo ======================== APPLE 1 =================================================
 call kickc -t asm6502 -D=APPLE1 test.c -o test_apple1.prg -e
 copy test.prg test_apple1.prg
+del test_apple1.klog
+del test_apple1.vs
 call node hexdump > test_apple1.woz
+
+del *.klog
+del *.vs
+del *.dbg
+del test.prg
+
