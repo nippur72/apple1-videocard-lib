@@ -23,8 +23,8 @@ void demo_interrupt() {
    for(;;) {
       if(keypressed()) {
          byte k = woz_getkey();
-              if(k=='1') tms_interrupt(1);
-         else if(k=='0') tms_interrupt(0);
+              if(k=='1') { tms_interrupt(1); woz_puts("INT ENABLED\r"); }
+         else if(k=='0') { tms_interrupt(0); woz_puts("INT DISABLED\r"); }
          else if(k=='E') break;
       }
 
