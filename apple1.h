@@ -55,7 +55,7 @@ void woz_mon() {
 // returns nonzero if a key has been pressed
 inline byte keypressed() {
    #ifdef APPLE1
-      return PEEK(KEY_DATA) & 0x80;
+      return PEEK(KEY_CTRL) & 0x80;
    #else
       return 0;
    #endif
