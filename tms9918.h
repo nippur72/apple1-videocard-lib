@@ -14,7 +14,7 @@ const byte HIADDRESS_MASK = 0b00111111;   // bit mask for the high byte of the a
 const byte WRITE_TO_REG   = 0b10000000;   // write to register command
 const byte REGNUM_MASK    = 0b00000111;   // bit mask for register number (0-7)
 
-// register 1 masks
+// register 0 masks
 const byte REG0_M3_MASK     = 0b00000010;
 const byte REG0_EXTVID_MASK = 0b00000001;
 
@@ -45,6 +45,7 @@ const byte COLOR_MAGENTA      = 0xD;
 const byte COLOR_GRAY         = 0xE;
 const byte COLOR_WHITE        = 0xF;
 
+// macro for combining foreground and background into a single byte value
 #define COLOR_BYTE(f,b)     (((f)<<4)|(b))
 
 // status register bits (read only)
@@ -93,21 +94,27 @@ void TMS_INIT(byte *table) {
    }
 }
 
-// turn on off interrupt enable bit on register 1
-void tms_interrupt(byte val) {
+const byte INTERRUPT_ENABLED  = 1;
+const byte INTERRUPT_DISABLED = 0;
+
+// sets the interrupt enable bit on register 1
+void tms_set_interrupt_bit(byte val) {
    byte regvalue = TMS_REGS_LATCH[1] & (~REG1_IE_MASK);
    if(val) regvalue |= REG1_IE_MASK;
    TMS_WRITE_REG(1, regvalue);
 }
 
-// turn on off blank bit on register 1
+const byte BLANK_ON  = 0;
+const byte BLANK_OFF = 1;
+
+// sets the blank bit on register 1
 void tms_blank(byte val) {
    byte regvalue = TMS_REGS_LATCH[1] & (~REG1_BLANK_MASK);
    if(val) regvalue |= REG1_BLANK_MASK;
    TMS_WRITE_REG(1, regvalue);
 }
 
-// turn on off external video bit on register 0
+// sets the external video input bit on register 0
 void tms_external_video(byte val) {
    byte regvalue = TMS_REGS_LATCH[0] & (~REG0_EXTVID_MASK);
    if(val) regvalue |= REG0_EXTVID_MASK;

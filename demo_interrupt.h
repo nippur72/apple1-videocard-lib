@@ -13,7 +13,7 @@ void demo_interrupt() {
    install_interrupt();
 
    // enables interrupts on the TMS9918
-   tms_interrupt(1);
+   tms_set_interrupt_bit(INTERRUPT_ENABLED);
 
    woz_puts("INTERRUPT INSTALLED\r");
    woz_puts("0 TURNS OFF\r");
@@ -21,11 +21,10 @@ void demo_interrupt() {
    woz_puts("E EXIT TO MAIN MENU\r");
 
    for(;;) {
-      if(keypressed()) {
       if(woz_iskeypressed()) {
          byte k = woz_getkey();
-              if(k=='1') { tms_interrupt(1); woz_puts("INT ENABLED\r"); }
-         else if(k=='0') { tms_interrupt(0); woz_puts("INT DISABLED\r"); }
+              if(k=='1') { tms_set_interrupt_bit(INTERRUPT_ENABLED);  woz_puts("INT ENABLED\r"); }
+         else if(k=='0') { tms_set_interrupt_bit(INTERRUPT_DISABLED); woz_puts("INT DISABLED\r"); }
          else if(k=='E') break;
       }
 
@@ -39,7 +38,7 @@ void demo_interrupt() {
    }
 
    // disables interrupts on the TMS9918
-   tms_interrupt(0);
+   tms_set_interrupt_bit(INTERRUPT_DISABLED);
 
    woz_puts("INTERRUPT STOPPED\r");
 }
