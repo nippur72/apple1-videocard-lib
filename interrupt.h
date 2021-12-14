@@ -16,6 +16,7 @@ export volatile byte _ticks;
 export volatile byte _seconds;
 export volatile byte _minutes;
 export volatile byte _hours;
+export volatile byte _irq_trigger;
 
 // interrupt routine called every 1/60th by the CPU after TMS9918 sets the /INT pin
 export __interrupt(hardware_all) void interrupt_handler() {
@@ -30,6 +31,8 @@ export __interrupt(hardware_all) void interrupt_handler() {
          }
       }
    }
+   _irq_trigger = 1;         // signals that an interrupt has been triggered
+
    acknowledge_interrupt();  // acknowledge interrupt by reading the status register
 }
 
@@ -40,3 +43,10 @@ void install_interrupt() {
    IRQ_JUMP_ADDRESS = (word) &interrupt_handler;  // JUMP interrupt_handler
    asm { cli };                                   // re-enable 6502 interrupts
 }
+
+// waits until IRQ is triggered
+void wait_interrupt() {
+   // _irq_trigger = 0;
+   // while(_irq_trigger == 0);  // waits until it's set to 1 from the interrupt handler
+}
+

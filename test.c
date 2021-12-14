@@ -2,18 +2,18 @@
 
 #pragma encoding(ascii)    // encode strings in plain ascii
 
-#include "utils.h"
-#include "apple1.h"
-#include "tms9918.h"
-#include "font8x8.h"
-#include "tms_screen1.h"
-#include "tms_screen2.h"
-#include "interrupt.h"
+// #include "utils.h"
+// #include "apple1.h"
+// #include "tms9918.h"
+// #include "font8x8.h"
+// #include "tms_screen1.h"
+// #include "tms_screen2.h"
+// #include "interrupt.h"
 
-#include "demo_amiga_hand.h"
-#include "demo_interrupt.h"
-#include "demo_extvid.h"
-#include "demo_blank.h"
+// #include "demo_amiga_hand.h"
+// #include "demo_interrupt.h"
+// #include "demo_extvid.h"
+// #include "demo_blank.h"
 
 void help() {
    woz_puts(

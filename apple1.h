@@ -83,3 +83,24 @@ byte woz_getkey() {
       return key;
    #endif
 }
+
+// non blocking keyboard read
+// reads a key and return 0 if no key is pressed
+byte woz_readkey() {
+   #ifdef APPLE1
+      if((PEEK(KEY_CTRL) & 0x80)==0) return 0;
+      else return PEEK(KEY_DATA) & 0x7f;
+   #else
+      byte key;
+      byte const *keyptr = &key;
+      kickasm(uses keyptr, uses GETIN) {{
+         jsr GETIN
+         cmp #0
+         bne __keypress
+         lda #0
+         __keypress:
+         sta keyptr
+      }}
+      return key;
+   #endif
+}
