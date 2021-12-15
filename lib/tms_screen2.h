@@ -36,6 +36,13 @@ void screen2_init_bitmap(byte color) {
       TMS_WRITE_DATA_PORT(i);      NOP;  // color
    }
 
+   // fill pattern table with 0 (clear screen)
+   tms_set_vram_write_addr(SCREEN2_PATTERN_TABLE);
+   for(word i=768*8;i!=0;i--) {
+      TMS_WRITE_DATA_PORT(0);
+      NOP;
+   }
+
    // fill color table with black on white
    tms_set_vram_write_addr(SCREEN2_COLOR_TABLE);
    for(word i=768*8;i!=0;i--) {
@@ -47,13 +54,6 @@ void screen2_init_bitmap(byte color) {
    tms_set_vram_write_addr(SCREEN2_NAME_TABLE);
    for(word i=0;i<SCREEN2_SIZE;i++) {
       TMS_WRITE_DATA_PORT(i & 0xFF); 
-      NOP;
-   }
-
-   // fill pattern table with 0 (clear screen)
-   tms_set_vram_write_addr(SCREEN2_PATTERN_TABLE);
-   for(word i=768*8;i!=0;i--) {
-      TMS_WRITE_DATA_PORT(0); 
       NOP;
    }
 }
