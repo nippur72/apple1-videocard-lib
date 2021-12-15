@@ -32,7 +32,7 @@ void drawLogo() {
          if(tile) {
             byte ch  = piece_chars[tile];
             byte col = piece_colors[tile];
-            draw_tile(c,r+3,ch,col);
+            draw_tile(c,r+1,ch,col);
          }
       }
    }
@@ -47,9 +47,12 @@ void introScreen() {
 
    drawLogo();
 
-   print_string(3,13,"(C) 2021 ANTONINO PORCINO", FG_BG(COLOR_LIGHT_YELLOW,COLOR_BLACK));
-   print_string(7,18,"USE " BG_DARK_BLUE"I"BG_BLACK" "BG_DARK_BLUE"J"BG_BLACK" "BG_DARK_BLUE"K"BG_BLACK" "BG_DARK_BLUE"L"BG_BLACK" "BG_DARK_BLUE"SPACE"BG_BLACK , FG_BG(COLOR_WHITE ,COLOR_BLACK));
-   print_string(5,20,"PRESS " BG_DARK_BLUE "RETURN" BG_BLACK " TO START" , FG_BG(COLOR_WHITE ,COLOR_BLACK));
+   print_string(8, 10, " FOR THE APPLE-1", FG_BG(COLOR_WHITE, COLOR_BLACK));
+   print_string(8, 14, "   WRITTEN BY   ", FG_BG(COLOR_WHITE, COLOR_BLACK));
+   print_string(8, 16, "ANTONINO PORCINO", FG_BG(COLOR_WHITE, COLOR_BLACK));
+
+   print_string(7,21,"USE " BG_DARK_BLUE"I"BG_BLACK" "BG_DARK_BLUE"J"BG_BLACK" "BG_DARK_BLUE"K"BG_BLACK" "BG_DARK_BLUE"L"BG_BLACK" "BG_DARK_BLUE"SPACE"BG_BLACK , FG_BG(COLOR_DARK_YELLOW ,COLOR_BLACK));
+   print_string(5,23,"PRESS " BG_DARK_BLUE "RETURN" BG_BLACK " TO START" , FG_BG(COLOR_DARK_YELLOW ,COLOR_BLACK));
 
    // wait for key released
    while(test_key(KEY_RETURN));
