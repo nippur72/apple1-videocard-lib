@@ -4,19 +4,8 @@
 // TODO-KICKC: conflict parameter if prototype has different parameter names
 // TODO-KICKC: missing fragment: int x = pl->x + data[t].offset_x; oppure int x = pl->x + d->offset_x;
 
-// TODO-ALIGN: read board[] (avoid [], use pointer)
-// TODO-ALIGN: ck_scroll_down() do not use memcpy, remove <string.h>
-// TODO-ALIGN: gr_drawpiece: byte piece = p->piece;
-// TODO-ALIGN: gr_updateboard sfora se 255
-// TODO-ALIGN: grboard: remove CRUNCH_CHAR1 e 2, BACKGROUND
-// TODO-ALIGN: score unsigned ?
-// TODO-ALIGN: int generate_new_piece()
-// TODO-ALIGN: unsigned int/byte all 
-// TODO-ALIGN: PIECE_IS_NEXT 
-
 // TODO: solve division by counter_factor
 // TODO: interrupt and wait_interrupt()
-// TODO: better choice of colors for tiles
 
 //
 // TETRIS for Apple1 + TMS9918 video card by P-LAB
