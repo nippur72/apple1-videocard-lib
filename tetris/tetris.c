@@ -47,75 +47,29 @@
 #include "draw.h"
 #include "pieces.h"
 
-#define STYLE 3
-
-#if STYLE == 1
-   byte piece_chars[NUMPIECES] = {
-      16, // L (orange in the original tetris)
-      16, // J
-      16, // T
-      16, // I
-      16, // O
-      16, // S
-      16, // Z
-   };
-   byte piece_colors[NUMPIECES] = {
-      FG_BG( 0 , WHITE         ),  // L (orange in the original tetris)
-      FG_BG( 0 , VIOLET        ),  // J
-      FG_BG( 0 , LIGHT_MAGENTA ),  // T
-      FG_BG( 0 , LIGHT_CYAN    ),  // I
-      FG_BG( 0 , YELLOW        ),  // O
-      FG_BG( 0 , LIGHT_GREEN   ),  // S
-      FG_BG( 0 , LIGHT_RED     )   // Z
-   };
-#endif
-
-#if STYLE == 2
-byte piece_chars[NUMPIECES] = {
-   0,  // L (orange in the original tetris)
-   1,  // J
-   2,  // T
-   3,  // I
-   4,  // O
-   15, // S
-   14, // Z
-};
-byte piece_colors[NUMPIECES] = {
-   FG_BG( WHITE         , DARK_GREY ),  // L (orange in the original tetris)
-   FG_BG( VIOLET        , BLUE      ),  // J
-   FG_BG( LIGHT_MAGENTA , MAGENTA   ),  // T
-   FG_BG( LIGHT_CYAN    , CYAN      ),  // I
-   FG_BG( YELLOW        , BROWN     ),  // O
-   FG_BG( LIGHT_GREEN   , GREEN     ),  // S
-   FG_BG( LIGHT_RED     , RED       )   // Z
-};
-#endif
-
 #define EMPTY_GR_CHAR  32
 #define EMPTY_GR_COLOR FG_BG(COLOR_BLACK, COLOR_BLACK)
 
-#if STYLE == 3
 byte piece_chars[NUMPIECES+1] = {
    0, // L (orange in the original tetris)
-   1, // J
+   3, // J
    2, // T
-   3, // I
+   1, // I
    2, // O
    1, // S
    0, // Z
    EMPTY_GR_CHAR // space
 };
 byte piece_colors[NUMPIECES+1] = {
-   FG_BG( COLOR_GREY         , COLOR_WHITE       ),  // L (orange in the original tetris)
-   FG_BG( COLOR_LIGHT_BLUE   , COLOR_DARK_BLUE   ),  // J
-   FG_BG( COLOR_MAGENTA      , COLOR_WHITE       ),  // T
-   FG_BG( COLOR_CYAN         , COLOR_LIGHT_BLUE  ),  // I
-   FG_BG( COLOR_LIGHT_YELLOW , COLOR_DARK_YELLOW ),  // O
-   FG_BG( COLOR_LIGHT_GREEN  , COLOR_DARK_GREEN  ),  // S
-   FG_BG( COLOR_LIGHT_RED    , COLOR_DARK_RED    ),  // Z
+   FG_BG( COLOR_GREY         , COLOR_WHITE       ),  // L ORANGE
+   FG_BG( COLOR_LIGHT_BLUE   , COLOR_DARK_BLUE   ),  // J VIOLET
+   FG_BG( COLOR_MAGENTA      , COLOR_WHITE       ),  // T LIGHT_MAGENTA
+   FG_BG( COLOR_CYAN         , COLOR_LIGHT_BLUE  ),  // I LIGHT_CYAN
+   FG_BG( COLOR_LIGHT_YELLOW , COLOR_DARK_YELLOW ),  // O YELLOW
+   FG_BG( COLOR_LIGHT_GREEN  , COLOR_DARK_GREEN  ),  // S LIGHT_GREEN
+   FG_BG( COLOR_LIGHT_RED    , COLOR_DARK_RED    ),  // Z LIGHT_RED
    EMPTY_GR_COLOR                                    // empty character
 };
-#endif
 
 void check_crunched_lines();
 
