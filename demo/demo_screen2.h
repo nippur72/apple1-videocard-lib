@@ -1,11 +1,14 @@
 void prova_screen2() {
    tms_init_regs(SCREEN2_TABLE);
-   screen2_init_bitmap(FG_BG(COLOR_WHITE,COLOR_BLACK));   
 
-   screen2_puts(0,0,FG_BG(COLOR_BLACK,COLOR_WHITE),"*** P-LAB  VIDEO CARD SYSTEM ***");
-   screen2_puts(0,2,FG_BG(COLOR_BLACK,COLOR_WHITE),"16K VRAM BYTES FREE");
-   screen2_puts(0,4,FG_BG(COLOR_BLACK,COLOR_WHITE),"READY.");
+   byte text_color = FG_BG(COLOR_BLACK,COLOR_WHITE);
 
+   screen2_init_bitmap(text_color);
+   screen2_puts(0, 0, text_color, "*** P-LAB  VIDEO CARD SYSTEM ***");
+   screen2_puts(0, 2, text_color, "16K VRAM BYTES FREE");
+   screen2_puts(0, 4, text_color, "READY.");
+
+   // display all colors in the palette
    for(byte i=0;i<16;i++) {
       screen2_puts(5,(byte)(6+i),(byte)(((15-i)<<4)+i),"     SCREEN 2     ");
    }
