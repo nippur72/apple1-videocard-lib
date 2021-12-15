@@ -156,8 +156,7 @@ byte amiga_data[612] = {
 
 void demo_amiga_hand() {
    TMS_INIT(SCREEN2_TABLE);
-   SCREEN2_FILL();
-   screen2_square_sprites();
+   screen2_init_bitmap(COLOR_BYTE(COLOR_WHITE,COLOR_BLACK));
 
    SCREEN2_PUTS(0, 0, COLOR_BYTE(COLOR_BLACK,COLOR_WHITE), "*** P-LAB  VIDEO CARD SYSTEM ***");
    SCREEN2_PUTS(0, 2, COLOR_BYTE(COLOR_BLACK,COLOR_WHITE), "16K VRAM BYTES FREE");

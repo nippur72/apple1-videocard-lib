@@ -395,6 +395,10 @@ void main() {
    memcpy(LOWRAM_START, DATAINCODE, LOWRAM_SIZE);
 #endif
 
+   // initialize the screen
+   TMS_INIT(SCREEN2_TABLE);
+   screen2_init_bitmap(COLOR_BYTE(COLOR_BLACK,COLOR_BLACK));   
+
    while(1) {
       introScreen();
       initGame();

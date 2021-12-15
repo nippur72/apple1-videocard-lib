@@ -19,23 +19,42 @@ const word SCREEN2_SPRITE_PATTERNS = 0x1800;
 const word SCREEN2_SPRITE_ATTRS    = 0x3b00;
 const word SCREEN2_SIZE            = (32*24);
 
-void SCREEN2_FILL() {
-   // fills name table x3 with increasing numbers
-   set_vram_write_addr(SCREEN2_NAME_TABLE);
-   for(word i=0;i<SCREEN2_SIZE;i++) {
-      TMS_WRITE_DATA_PORT(i & 0xFF);
+// prepare the screen 2 to be used as a bitmap
+void screen2_init_bitmap(byte color) {
+   // erase the first sprite pattern
+   set_vram_write_addr(SCREEN2_SPRITE_PATTERNS);    // start writing in the sprite patterns
+   for(byte i=0;i<8;i++) {
+      TMS_WRITE_DATA_PORT(0);      NOP; 
    }
 
-   // fill pattern table with 0 (clear screen)
-   set_vram_write_addr(SCREEN2_PATTERN_TABLE);
-   for(word i=768*8;i!=0;i--) {
-      TMS_WRITE_DATA_PORT(0);
+   // set all sprite coordinates to 0
+   set_vram_write_addr(SCREEN2_SPRITE_ATTRS);       // start writing in the sprite attribute
+   for(byte i=0;i<32;i++) {
+      TMS_WRITE_DATA_PORT(0);      NOP;  // y coordinate
+      TMS_WRITE_DATA_PORT(0);      NOP;  // x coordinate
+      TMS_WRITE_DATA_PORT(0);      NOP;  // name
+      TMS_WRITE_DATA_PORT(i);      NOP;  // color
    }
 
    // fill color table with black on white
    set_vram_write_addr(SCREEN2_COLOR_TABLE);
    for(word i=768*8;i!=0;i--) {
-      TMS_WRITE_DATA_PORT(COLOR_BYTE(COLOR_BLACK,COLOR_WHITE));
+      TMS_WRITE_DATA_PORT(color);  
+      NOP;
+   }
+
+   // fills name table x3 with increasing numbers
+   set_vram_write_addr(SCREEN2_NAME_TABLE);
+   for(word i=0;i<SCREEN2_SIZE;i++) {
+      TMS_WRITE_DATA_PORT(i & 0xFF); 
+      NOP;
+   }
+
+   // fill pattern table with 0 (clear screen)
+   set_vram_write_addr(SCREEN2_PATTERN_TABLE);
+   for(word i=768*8;i!=0;i--) {
+      TMS_WRITE_DATA_PORT(0); 
+      NOP;
    }
 }
 
@@ -80,27 +99,9 @@ void SCREEN2_PLOT(byte x, byte y) {
    TMS_WRITE_DATA_PORT(data);
 }
 
-void screen2_square_sprites() {
-   // fills first sprite pattern with 255
-   set_vram_write_addr(SCREEN2_SPRITE_PATTERNS);    // start writing in the sprite patterns
-   for(byte i=0;i<8;i++) {
-      TMS_WRITE_DATA_PORT(0);
-   }
-
-   // set sprite coordinates
-   set_vram_write_addr(SCREEN2_SPRITE_ATTRS);       // start writing in the sprite attribute
-   for(byte i=0;i<32;i++) {
-      TMS_WRITE_DATA_PORT(0);      NOP; NOP; NOP; NOP; // y coordinate
-      TMS_WRITE_DATA_PORT(0);      NOP; NOP; NOP; NOP; // x coordinate
-      TMS_WRITE_DATA_PORT(0);      NOP; NOP; NOP; NOP; // name
-      TMS_WRITE_DATA_PORT(i);      NOP; NOP; NOP; NOP; // color
-   }
-}
-
 void prova_screen2() {
    TMS_INIT(SCREEN2_TABLE);
-   SCREEN2_FILL();
-   screen2_square_sprites();
+   screen2_init_bitmap(COLOR_BYTE(COLOR_WHITE,COLOR_BLACK));   
 
    SCREEN2_PUTS(0,0,COLOR_BYTE(COLOR_BLACK,COLOR_WHITE),"*** P-LAB  VIDEO CARD SYSTEM ***");
    SCREEN2_PUTS(0,2,COLOR_BYTE(COLOR_BLACK,COLOR_WHITE),"16K VRAM BYTES FREE");

@@ -40,9 +40,6 @@ void drawLogo() {
 
 // introduction screen
 void introScreen() {
-   TMS_INIT(SCREEN2_TABLE);
-   SCREEN2_FILL();
-   screen2_square_sprites();
    set_color(COLOR_BLACK);
 
    // simulate cls (TODO improve speed)
