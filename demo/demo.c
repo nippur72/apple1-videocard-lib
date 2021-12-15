@@ -31,6 +31,11 @@ void help() {
 }
 
 void main() {
+
+#ifdef APPLE1
+   apple1_eprom_init();
+#endif
+
    byte key = 'H';
    for(;;) {
            if(key == '1')  prova_screen1();
