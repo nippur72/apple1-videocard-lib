@@ -20,7 +20,7 @@ byte test_key(byte key) {
 
 // reads the keyboard and return the key pressed
 byte read_keyboard() {
-   return woz_readkey();
+   return apple1_readkey();
 }
 
 byte player_input() {

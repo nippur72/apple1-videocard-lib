@@ -8,5 +8,5 @@ void flip_blank() {
    else                   woz_puts("BLANK\r");
 
    // write "blank" bit
-   tms_blank(blank);
+   tms_set_blank(blank);
 }

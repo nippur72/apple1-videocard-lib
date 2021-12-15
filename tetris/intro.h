@@ -32,7 +32,7 @@ void drawLogo() {
          if(tile) {
             byte ch  = piece_chars[tile];
             byte col = piece_colors[tile];
-            gr4_tile(c,r+3,ch,col);
+            draw_tile(c,r+3,ch,col);
          }
       }
    }
@@ -40,23 +40,24 @@ void drawLogo() {
 
 // introduction screen
 void introScreen() {
-   set_color(COLOR_BLACK);
+   tms_set_color(COLOR_BLACK);
 
    // simulate cls (TODO improve speed)
    fillFrame(0, 0, 32, 24, 32, FG_BG(COLOR_BLACK, COLOR_BLACK));
 
    drawLogo();
 
-   gr4_prints(3,13,"(C) 2021 ANTONINO PORCINO"   , FG_BG(COLOR_LIGHT_YELLOW,COLOR_BLACK));
-   gr4_prints(2,18,"USE ARROWS+SPACE OR JOYSTICK", FG_BG(COLOR_WHITE ,COLOR_BLACK));
-   gr4_prints(5,20,"PRESS RETURN TO START"       , FG_BG(COLOR_WHITE ,COLOR_BLACK));
+   print_string(3,13,"(C) 2021 ANTONINO PORCINO", FG_BG(COLOR_LIGHT_YELLOW,COLOR_BLACK));
+   print_string(7,18,"USE " BG_DARK_BLUE"I"BG_BLACK" "BG_DARK_BLUE"J"BG_BLACK" "BG_DARK_BLUE"K"BG_BLACK" "BG_DARK_BLUE"L"BG_BLACK" "BG_DARK_BLUE"SPACE"BG_BLACK , FG_BG(COLOR_WHITE ,COLOR_BLACK));
+   print_string(5,20,"PRESS " BG_DARK_BLUE "RETURN" BG_BLACK " TO START" , FG_BG(COLOR_WHITE ,COLOR_BLACK));
 
    // wait for key released
    while(test_key(KEY_RETURN));
 
-   // wait for key press and do the coloured animation   
+   // wait for key press 
    while(!test_key(KEY_RETURN)) {
       // TODO music      
       rand();  // extract random numbers, making rand() more "random"
    }
 }
+

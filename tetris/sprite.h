@@ -9,7 +9,7 @@ typedef struct {
    byte angle;
 } sprite;
 
-INLINE void sprite_copy(sprite *to, sprite *from) {
+inline void sprite_copy(sprite *to, sprite *from) {
    memcpy(to, from, sizeof(sprite));
 }
 

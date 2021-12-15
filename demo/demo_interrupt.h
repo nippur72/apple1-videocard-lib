@@ -21,18 +21,18 @@ void demo_interrupt() {
    woz_puts("E EXIT TO MAIN MENU\r");
 
    for(;;) {
-      if(woz_iskeypressed()) {
-         byte k = woz_getkey();
+      if(apple1_iskeypressed()) {
+         byte k = apple1_getkey();
               if(k=='1') { tms_set_interrupt_bit(INTERRUPT_ENABLED);  woz_puts("INT ENABLED\r"); }
          else if(k=='0') { tms_set_interrupt_bit(INTERRUPT_DISABLED); woz_puts("INT DISABLED\r"); }
          else if(k=='E') break;
       }
 
       if(last_seconds != _seconds) {
-         woz_put_hex(_hours);   woz_putc(':');
-         woz_put_hex(_minutes); woz_putc(':');
-         woz_put_hex(_seconds); woz_putc('.');
-         woz_put_hex(_ticks);   woz_putc('\r');
+         woz_print_hex(_hours);   woz_putc(':');
+         woz_print_hex(_minutes); woz_putc(':');
+         woz_print_hex(_seconds); woz_putc('.');
+         woz_print_hex(_ticks);   woz_putc('\r');
          last_seconds = _seconds;
       }
    }

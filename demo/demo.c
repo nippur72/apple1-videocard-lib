@@ -1,19 +1,19 @@
 // TODO make screen tables parametric (fixed values calculated by macros)
 
-#pragma encoding(ascii)    // encode strings in plain ascii
+#include "../lib/utils.h"
+#include "../lib/apple1.h"
+#include "../lib/tms9918.h"
+#include "../lib/font8x8.h"
+#include "../lib/tms_screen1.h"
+#include "../lib/tms_screen2.h"
+#include "../lib/interrupt.h"
 
-// #include "utils.h"
-// #include "apple1.h"
-// #include "tms9918.h"
-// #include "font8x8.h"
-// #include "tms_screen1.h"
-// #include "tms_screen2.h"
-// #include "interrupt.h"
-
-// #include "demo_amiga_hand.h"
-// #include "demo_interrupt.h"
-// #include "demo_extvid.h"
-// #include "demo_blank.h"
+#include "demo_screen1.h"
+#include "demo_screen2.h"
+#include "demo_amiga_hand.h"
+#include "demo_interrupt.h"
+#include "demo_extvid.h"
+#include "demo_blank.h"
 
 void help() {
    woz_puts(
@@ -43,7 +43,7 @@ void main() {
       else if(key == '0')  break;
       else woz_putc(key);
 
-      key = woz_getkey();
+      key = apple1_getkey();
    }
    woz_puts("BYE\r");
    woz_mon();

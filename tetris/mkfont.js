@@ -10,6 +10,8 @@ function encode(s) {
    console.log(`   0b${msg.substr(msg.length-8)},`);
 }
 
+console.log("// file generated automatically by mkfont.js -- do not edit");
+
 // char $0a.");
 encode("........");
 encode("........");

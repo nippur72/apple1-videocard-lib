@@ -37,20 +37,15 @@
 
 // TODO solve division by counter_factor
 
-// ERASED: #include <lib500.h>
-#define INLINE inline
-#define FG_BG(f,b)     (((f)<<4)|(b))
-#include "../utils.h"
-#include "../apple1.h"
-#include "../tms9918.h"
-#include "../font8x8.h"
-#include "../tms_screen1.h"
-#include "../tms_screen2.h"
-#include "../interrupt.h"
+#include "../lib/utils.h"
+#include "../lib/apple1.h"
+#include "../lib/tms9918.h"
+#include "../lib/font8x8.h"
+#include "../lib/tms_screen1.h"
+#include "../lib/tms_screen2.h"
+#include "../lib/interrupt.h"
 
-// simulate the calls made in lib500
-#include "lib500_mock.h"
-
+#include "draw.h"
 #include "pieces.h"
 
 #define STYLE 3
@@ -378,12 +373,6 @@ void initGame() {
    generate_new_piece();
 }
 
-#ifdef APPLE1
-#define LOWRAM_START 0x280
-#define LOWRAM_END   0x7FF
-#define LOWRAM_SIZE  (LOWRAM_END - LOWRAM_START + 1)
-#define DATAINCODE   (0x8000 - LOWRAM_SIZE)
-#endif
 
 void main() {
 
@@ -391,13 +380,12 @@ void main() {
    //install_interrupt();
 
 #ifdef APPLE1
-   // copy the initializaton data from ROM to lowram where "Data" segment is allocated
-   memcpy(LOWRAM_START, DATAINCODE, LOWRAM_SIZE);
+   apple1_eprom_init();
 #endif
 
    // initialize the screen
-   TMS_INIT(SCREEN2_TABLE);
-   screen2_init_bitmap(COLOR_BYTE(COLOR_BLACK,COLOR_BLACK));   
+   tms_init_regs(SCREEN2_TABLE);
+   screen2_init_bitmap(FG_BG(COLOR_BLACK,COLOR_BLACK));   
 
    while(1) {
       introScreen();

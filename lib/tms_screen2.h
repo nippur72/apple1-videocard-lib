@@ -22,13 +22,13 @@ const word SCREEN2_SIZE            = (32*24);
 // prepare the screen 2 to be used as a bitmap
 void screen2_init_bitmap(byte color) {
    // erase the first sprite pattern
-   set_vram_write_addr(SCREEN2_SPRITE_PATTERNS);    // start writing in the sprite patterns
+   tms_set_vram_write_addr(SCREEN2_SPRITE_PATTERNS);    // start writing in the sprite patterns
    for(byte i=0;i<8;i++) {
       TMS_WRITE_DATA_PORT(0);      NOP; 
    }
 
    // set all sprite coordinates to 0
-   set_vram_write_addr(SCREEN2_SPRITE_ATTRS);       // start writing in the sprite attribute
+   tms_set_vram_write_addr(SCREEN2_SPRITE_ATTRS);       // start writing in the sprite attribute
    for(byte i=0;i<32;i++) {
       TMS_WRITE_DATA_PORT(0);      NOP;  // y coordinate
       TMS_WRITE_DATA_PORT(0);      NOP;  // x coordinate
@@ -37,38 +37,38 @@ void screen2_init_bitmap(byte color) {
    }
 
    // fill color table with black on white
-   set_vram_write_addr(SCREEN2_COLOR_TABLE);
+   tms_set_vram_write_addr(SCREEN2_COLOR_TABLE);
    for(word i=768*8;i!=0;i--) {
       TMS_WRITE_DATA_PORT(color);  
       NOP;
    }
 
    // fills name table x3 with increasing numbers
-   set_vram_write_addr(SCREEN2_NAME_TABLE);
+   tms_set_vram_write_addr(SCREEN2_NAME_TABLE);
    for(word i=0;i<SCREEN2_SIZE;i++) {
       TMS_WRITE_DATA_PORT(i & 0xFF); 
       NOP;
    }
 
    // fill pattern table with 0 (clear screen)
-   set_vram_write_addr(SCREEN2_PATTERN_TABLE);
+   tms_set_vram_write_addr(SCREEN2_PATTERN_TABLE);
    for(word i=768*8;i!=0;i--) {
       TMS_WRITE_DATA_PORT(0); 
       NOP;
    }
 }
 
-void SCREEN2_PUTC(byte ch, byte x, byte y, byte col) {
+void screen2_putc(byte ch, byte x, byte y, byte col) {
    byte *source = &FONT[(word)(ch-32)*8];
    word addr = x*8 + y*256;
-   set_vram_write_addr(SCREEN2_PATTERN_TABLE + addr); for(byte i=0;i<8;i++) TMS_WRITE_DATA_PORT(source[i]);
-   set_vram_write_addr(SCREEN2_COLOR_TABLE   + addr); for(byte i=0;i<8;i++) TMS_WRITE_DATA_PORT(col);
+   tms_set_vram_write_addr(SCREEN2_PATTERN_TABLE + addr); for(byte i=0;i<8;i++) TMS_WRITE_DATA_PORT(source[i]);
+   tms_set_vram_write_addr(SCREEN2_COLOR_TABLE   + addr); for(byte i=0;i<8;i++) TMS_WRITE_DATA_PORT(col);
 }
 
-void SCREEN2_PUTS(byte x, byte y, byte col, char *s) {
+void screen2_puts(byte x, byte y, byte col, char *s) {
    byte c;
    while(c=*s++) {
-      SCREEN2_PUTC(c, x++, y, col);
+      screen2_putc(c, x++, y, col);
    }
 }
 
@@ -78,13 +78,13 @@ void SCREEN2_PUTS(byte x, byte y, byte col, char *s) {
 
 byte SCREEN2_PLOT_MODE = PLOT_MODE_SET;
 
-void SCREEN2_PLOT(byte x, byte y) {
+void screen2_plot(byte x, byte y) {
    byte pow2_table_reversed[8] = { 128,64,32,16,8,4,2,1 };
    word paddr = SCREEN2_PATTERN_TABLE + (word)(x & 0b11111000) + (word)(y & 0b11111000)*32 + y%8;
-   set_vram_read_addr(paddr);
+   tms_set_vram_read_addr(paddr);
    byte data = TMS_READ_DATA_PORT;
    byte mask = pow2_table_reversed[x%8];
-   set_vram_write_addr(paddr);
+   tms_set_vram_write_addr(paddr);
    switch(SCREEN2_PLOT_MODE) {
       case PLOT_MODE_RESET:
          data &= ~mask;
@@ -99,35 +99,6 @@ void SCREEN2_PLOT(byte x, byte y) {
    TMS_WRITE_DATA_PORT(data);
 }
 
-void prova_screen2() {
-   TMS_INIT(SCREEN2_TABLE);
-   screen2_init_bitmap(COLOR_BYTE(COLOR_WHITE,COLOR_BLACK));   
-
-   SCREEN2_PUTS(0,0,COLOR_BYTE(COLOR_BLACK,COLOR_WHITE),"*** P-LAB  VIDEO CARD SYSTEM ***");
-   SCREEN2_PUTS(0,2,COLOR_BYTE(COLOR_BLACK,COLOR_WHITE),"16K VRAM BYTES FREE");
-   SCREEN2_PUTS(0,4,COLOR_BYTE(COLOR_BLACK,COLOR_WHITE),"READY.");
-
-   for(byte i=0;i<16;i++) {
-      SCREEN2_PUTS(5,(byte)(6+i),(byte)(((15-i)<<4)+i),"     SCREEN 2     ");
-   }
-
-   vti_line(18, 45,232,187);
-   vti_line(18,187,232, 45);
-
-   SCREEN2_PLOT_MODE = PLOT_MODE_RESET;
-
-   vti_line(18+5, 45,232+5,187);
-   vti_line(18+5,187,232+5, 45);
-
-   SCREEN2_PLOT_MODE = PLOT_MODE_INVERT;
-
-   vti_line(18+5+5, 45,232+5+5,187);
-   vti_line(18+5+5,187,232+5+5, 45);
-
-   SCREEN2_PLOT_MODE = PLOT_MODE_SET;
-
-   //vti_ellipse_rect(7,9,202,167);
-}
 
 signed int vti_abs(signed int x) {
     return x < 0 ? -x : x;
@@ -150,7 +121,7 @@ void vti_line(byte _x0, byte _y0, byte _x1, byte _y1) {
    signed int e2;
 
    for(;;){  /* loop */
-      SCREEN2_PLOT((byte)x0, (byte)y0);
+      screen2_plot((byte)x0, (byte)y0);
       if (x0==x1 && y0==y1) break;
       e2 = err<<1;//2*err;
       if (e2 >= dy) { err += dy; if(ix) ++x0; else --x0; } /* e_xy+e_x > 0 */
@@ -179,20 +150,20 @@ void vti_ellipse_rect(byte _x0, byte _y0, byte _x1, byte _y1)
     a *= 8*a; b1 = 8*b*b;
 
     do {
-        SCREEN2_PLOT((byte) x1, (byte) y0); //   I. Quadrant
-        SCREEN2_PLOT((byte) x0, (byte) y0); //  II. Quadrant
-        SCREEN2_PLOT((byte) x0, (byte) y1); // III. Quadrant
-        SCREEN2_PLOT((byte) x1, (byte) y1); //  IV. Quadrant
+        screen2_plot((byte) x1, (byte) y0); //   I. Quadrant
+        screen2_plot((byte) x0, (byte) y0); //  II. Quadrant
+        screen2_plot((byte) x0, (byte) y1); // III. Quadrant
+        screen2_plot((byte) x1, (byte) y1); //  IV. Quadrant
         e2 = 2*err;
         if (e2 <= dy) { y0++; y1--; err += dy += a; }  // y step
         if (e2 >= dx || 2*err > dy) { x0++; x1--; err += dx += b1; } // x step
     } while (x0 <= x1);
 
     while (y0-y1 < b) {  // too early stop of flat ellipses a=1
-        SCREEN2_PLOT((byte) x0-1, (byte) (y0)); // -> finish tip of ellipse
-        SCREEN2_PLOT((byte) x1+1, (byte) (y0++));
-        SCREEN2_PLOT((byte) x0-1, (byte) (y1));
-        SCREEN2_PLOT((byte) x1+1, (byte) (y1--));
+        screen2_plot((byte) x0-1, (byte) (y0)); // -> finish tip of ellipse
+        screen2_plot((byte) x1+1, (byte) (y0++));
+        screen2_plot((byte) x0-1, (byte) (y1));
+        screen2_plot((byte) x1+1, (byte) (y1--));
     }
 }
 */

@@ -1,3 +1,5 @@
+#pragma encoding(ascii)    // encode strings in plain ascii
+
 #ifdef APPLE1
    const byte *VDP_DATA = 0xCC00;       // TMS9918 data port (VRAM)
    const byte *VDP_REG  = 0xCC01;       // TMS9918 register port (write) or status (read)
@@ -46,7 +48,7 @@ const byte COLOR_GRAY         = 0xE;
 const byte COLOR_WHITE        = 0xF;
 
 // macro for combining foreground and background into a single byte value
-#define COLOR_BYTE(f,b)     (((f)<<4)|(b))
+#define FG_BG(f,b)          (((f)<<4)|(b))
 
 // status register bits (read only)
 #define FRAME_BIT(a)        ((a) & 0b10000000)
@@ -61,36 +63,36 @@ const byte COLOR_WHITE        = 0xF;
 #define TMS_READ_DATA_PORT        (*VDP_DATA);
 
 // sets the VRAM address on the TMS9918 for a write operation
-void set_vram_write_addr(word addr) {
+void tms_set_vram_write_addr(word addr) {
    TMS_WRITE_CTRL_PORT(LOBYTE(addr));
    TMS_WRITE_CTRL_PORT((HIBYTE(addr) & HIADDRESS_MASK)|WRITE_TO_VRAM);
 }
 
 // sets the VRAM address on the TMS9918 for a read operation
-void set_vram_read_addr(word addr) {
+void tms_set_vram_read_addr(word addr) {
    TMS_WRITE_CTRL_PORT(LOBYTE(addr));
    TMS_WRITE_CTRL_PORT((HIBYTE(addr) & HIADDRESS_MASK)|READ_FROM_VRAM);
 }
 
 // buffer containing the last register values, because TMS registers are write only
-byte TMS_REGS_LATCH[8];
+byte tms_regs_latch[8];
 
 // writes a value to a TMS9918 register (0-7)
-void TMS_WRITE_REG(byte regnum, byte val) {
+void tms_write_reg(byte regnum, byte val) {
    TMS_WRITE_CTRL_PORT(val);
    TMS_WRITE_CTRL_PORT((regnum & REGNUM_MASK)|WRITE_TO_REG);
-   TMS_REGS_LATCH[regnum] = val;  // save value to buffer
+   tms_regs_latch[regnum] = val;  // save value to buffer
 }
 
 // sets border color and background for mode 0
-inline void set_color(byte col) {
-   TMS_WRITE_REG(7, col);
+inline void tms_set_color(byte col) {
+   tms_write_reg(7, col);
 }
 
 // initialize all registers from a table
-void TMS_INIT(byte *table) {
+void tms_init_regs(byte *table) {
    for(byte i=0;i<8;i++) {
-      TMS_WRITE_REG(i, table[i]);
+      tms_write_reg(i, table[i]);
    }
 }
 
@@ -99,24 +101,24 @@ const byte INTERRUPT_DISABLED = 0;
 
 // sets the interrupt enable bit on register 1
 void tms_set_interrupt_bit(byte val) {
-   byte regvalue = TMS_REGS_LATCH[1] & (~REG1_IE_MASK);
+   byte regvalue = tms_regs_latch[1] & (~REG1_IE_MASK);
    if(val) regvalue |= REG1_IE_MASK;
-   TMS_WRITE_REG(1, regvalue);
+   tms_write_reg(1, regvalue);
 }
 
 const byte BLANK_ON  = 0;
 const byte BLANK_OFF = 1;
 
 // sets the blank bit on register 1
-void tms_blank(byte val) {
-   byte regvalue = TMS_REGS_LATCH[1] & (~REG1_BLANK_MASK);
+void tms_set_blank(byte val) {
+   byte regvalue = tms_regs_latch[1] & (~REG1_BLANK_MASK);
    if(val) regvalue |= REG1_BLANK_MASK;
-   TMS_WRITE_REG(1, regvalue);
+   tms_write_reg(1, regvalue);
 }
 
 // sets the external video input bit on register 0
-void tms_external_video(byte val) {
-   byte regvalue = TMS_REGS_LATCH[0] & (~REG0_EXTVID_MASK);
+void tms_set_external_video(byte val) {
+   byte regvalue = tms_regs_latch[0] & (~REG0_EXTVID_MASK);
    if(val) regvalue |= REG0_EXTVID_MASK;
-   TMS_WRITE_REG(0, regvalue);
+   tms_write_reg(0, regvalue);
 }

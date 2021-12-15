@@ -1,5 +1,7 @@
 // font from LASER-500 (ASCII characters only)
 
+#pragma data_seg(Code)
+
 byte FONT[768] = {
    0
 ,  0
@@ -856,3 +858,5 @@ byte FONT[768] = {
 ,  0
 ,  0
 };
+
+#pragma data_seg(Data)

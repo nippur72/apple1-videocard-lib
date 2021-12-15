@@ -6,9 +6,6 @@
 #define BOARD_CHAR_LEFT  6
 #define BOARD_CHAR_RIGHT 6
 
-//#define NCOLS 32                  /* number of screen columns */
-//#define NROWS 24                  /* number of screen rows, also board height */
-
 #define CRUNCH_CHAR_1  13
 #define CRUNCH_COLOR_1 FG_BG(COLOR_BLACK, COLOR_GRAY)
 
@@ -29,14 +26,6 @@
 
 #define NEXT_X (POS_NEXT_X+2)
 #define NEXT_Y (POS_NEXT_Y+3)
-
-void bit_fx2(int sound) {
-   // throw not implemented
-}
-
-void bit_fx3(int sound) {
-   // throw not implemented
-}
 
 void updateScore();
 void drawPlayground();
@@ -75,13 +64,13 @@ void updateScore() {
    byte color = FG_BG(COLOR_WHITE,COLOR_BLACK);
    
    right_pad_number(score);     
-   gr4_prints(POS_SCORE_X+1,POS_SCORE_Y+2,tmp,color);
+   draw_string(POS_SCORE_X+1,POS_SCORE_Y+2,tmp,color);
 
    right_pad_number((unsigned long)total_lines);
-   gr4_prints(POS_LINES_X+1,POS_LINES_Y+2,tmp,color);
+   draw_string(POS_LINES_X+1,POS_LINES_Y+2,tmp,color);
 
    right_pad_number((unsigned long)level);
-   gr4_prints(POS_LEVEL_X+1,POS_LEVEL_Y+2,tmp,color);
+   draw_string(POS_LEVEL_X+1,POS_LEVEL_Y+2,tmp,color);
 }
 
 #define FRAME_VERT  7
@@ -95,32 +84,32 @@ void updateScore() {
 void drawFrame(byte x, byte y, byte w, byte h, byte color) {
    byte i;
    for (i=1; i<w-1; i++) {      
-      gr4_tile(x+i, y    , FRAME_VERT, color);
-      gr4_tile(x+i, y+h-1, FRAME_VERT, color);
+      draw_tile(x+i, y    , FRAME_VERT, color);
+      draw_tile(x+i, y+h-1, FRAME_VERT, color);
    }
    for (i=1; i<h-1; i++) {
-      gr4_tile(x    , y+i, FRAME_HORIZ, color);
-      gr4_tile(x+w-1, y+i, FRAME_HORIZ, color);
+      draw_tile(x    , y+i, FRAME_HORIZ, color);
+      draw_tile(x+w-1, y+i, FRAME_HORIZ, color);
    }
 
-   gr4_tile(x     ,y    , FRAME_NE_CORNER, color);
-   gr4_tile(x+w-1 ,y    , FRAME_NW_CORNER, color);
-   gr4_tile(x     ,y+h-1, FRAME_SE_CORNER, color);
-   gr4_tile(x+w-1 ,y+h-1, FRAME_SW_CORNER, color);
+   draw_tile(x     ,y    , FRAME_NE_CORNER, color);
+   draw_tile(x+w-1 ,y    , FRAME_NW_CORNER, color);
+   draw_tile(x     ,y+h-1, FRAME_SE_CORNER, color);
+   draw_tile(x+w-1 ,y+h-1, FRAME_SW_CORNER, color);
 }
 
 void fillFrame(byte x, byte y, byte w, byte h, byte ch, byte color) {
    byte i,j;
    for (i=0; i<w; i++) {
       for (j=0; j<h; j++) {
-         gr4_tile(x+i, y+j, ch, color);
+         draw_tile(x+i, y+j, ch, color);
       }
    }
 }
 
 // draws the board
 void drawPlayground() {
-   set_color(COLOR_DARK_BLUE);
+   tms_set_color(COLOR_DARK_BLUE);
    byte frame_color = FG_BG(COLOR_GRAY,COLOR_BLACK);
    byte text_color  = FG_BG(COLOR_LIGHT_YELLOW,COLOR_BLACK);
 
@@ -145,11 +134,11 @@ void drawPlayground() {
    drawFrame(POS_NEXT_X , POS_NEXT_Y , 8, 8, frame_color);
    fillFrame(POS_NEXT_X+1 , POS_NEXT_Y+1 , 6, 6, 32, FG_BG(COLOR_BLACK, COLOR_BLACK));
 
-   gr4_prints(POS_SCORE_X+1, POS_SCORE_Y+1, "SCORE ", text_color);
-   gr4_prints(POS_LEVEL_X+1, POS_LEVEL_Y+1, "LEVEL ", text_color);
+   draw_string(POS_SCORE_X+1, POS_SCORE_Y+1, "SCORE ", text_color);
+   draw_string(POS_LEVEL_X+1, POS_LEVEL_Y+1, "LEVEL ", text_color);
 
-   gr4_prints(POS_LINES_X+1, POS_LINES_Y+1,"LINES ", text_color);
-   gr4_prints(POS_NEXT_X +1, POS_NEXT_Y +1,"NEXT" , text_color);
+   draw_string(POS_LINES_X+1, POS_LINES_Y+1,"LINES ", text_color);
+   draw_string(POS_NEXT_X +1, POS_NEXT_Y +1,"NEXT" , text_color);
 }
 
 // displays "game over" and waits for return key
@@ -161,10 +150,10 @@ void gameOver() {
 
    drawFrame(STARTBOARD_X-2, y-1,14,3, frame_color);
 
-   gr4_prints(STARTBOARD_X-1,y-0," GAME  OVER ", FG_BG(COLOR_LIGHT_YELLOW,COLOR_BLACK));
+   draw_string(STARTBOARD_X-1,y-0," GAME  OVER ", FG_BG(COLOR_LIGHT_YELLOW,COLOR_BLACK));
 
    // sound effect
-   bit_fx2(7);
+   // ERASED: bit_fx2(7);
 
    // since it's game over, there's no next piece
    gr_erasepiece(&piece_preview);
@@ -176,7 +165,7 @@ void gameOver() {
            if(flip <  60 ) color = FG_BG(COLOR_LIGHT_YELLOW ,COLOR_BLACK);
       else if(flip < 120 ) color = FG_BG(COLOR_DARK_BLUE    ,COLOR_BLACK);
       else flip = 0;
-      gr4_prints(STARTBOARD_X,y-0,"GAME  OVER", color);
+      draw_string(STARTBOARD_X,y-0,"GAME  OVER", color);
    }
 
    while(test_key(KEY_RETURN));
@@ -202,7 +191,7 @@ void gr_erasepiece(sprite *p) {
       int x = px + data->offset_x;
       int y = py + data->offset_y;
       data++;
-      gr4_tile((byte)x,(byte)y,EMPTY_GR_CHAR,EMPTY_GR_COLOR);
+      draw_tile((byte)x,(byte)y,EMPTY_GR_CHAR,EMPTY_GR_COLOR);
    }
 }
 
@@ -233,14 +222,14 @@ void gr_drawpiece(sprite *p) {
       */
       byte ch  = piece_chars[piece];  //piece_chars[p->piece];
       byte col = piece_colors[piece]; //piece_colors[p->piece];
-      gr4_tile((byte)x,(byte)y,ch,col);
+      draw_tile((byte)x,(byte)y,ch,col);
    }
 }
 
 // fills the specified line with an empty character
 void gr_crunch_line(byte line, byte crunch_char, byte crunch_color) {   
    for(byte i=0; i<BCOLS; i++) {
-      gr4_tile(STARTBOARD_X+i, STARTBOARD_Y+line, crunch_char, crunch_color);
+      draw_tile(STARTBOARD_X+i, STARTBOARD_Y+line, crunch_char, crunch_color);
    }   
 }
 
@@ -251,7 +240,7 @@ void gr_update_board() {
          tile = READ_BOARD(column,line);
          ch = piece_chars[tile];
          col = piece_colors[tile];         
-         gr4_tile(STARTBOARD_X+column, STARTBOARD_Y+line, ch, col);
+         draw_tile(STARTBOARD_X+column, STARTBOARD_Y+line, ch, col);
       }
    }
 }

@@ -1,8 +1,6 @@
 #ifndef PIECES_H
 #define PIECES_H
 
-#include "types.h"
-
 #define NUMPIECES 7                    // number of tetrominos in tetris
 #define NUMTILES  4                    // number of tiles in a piece
 #define NUMROT    4                    // number of rotations of a piece

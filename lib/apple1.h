@@ -15,7 +15,7 @@
 #endif
 
 // prints a hex byte using the WOZMON routine
-void woz_put_hex(byte c) {
+void woz_print_hex(byte c) {
    #ifdef APPLE1
       asm {
          lda c
@@ -53,7 +53,7 @@ void woz_mon() {
 }
 
 // returns nonzero if a key has been pressed
-inline byte woz_iskeypressed() {
+inline byte apple1_iskeypressed() {
    #ifdef APPLE1
       return PEEK(KEY_CTRL) & 0x80;
    #else
@@ -61,8 +61,9 @@ inline byte woz_iskeypressed() {
    #endif
 }
 
+// blocking keyboard read
 // reads a key from the apple-1 keyboard
-byte woz_getkey() {
+byte apple1_getkey() {
    #ifdef APPLE1
       asm {
          __wait:
@@ -86,7 +87,7 @@ byte woz_getkey() {
 
 // non blocking keyboard read
 // reads a key and return 0 if no key is pressed
-byte woz_readkey() {
+byte apple1_readkey() {
    #ifdef APPLE1
       if((PEEK(KEY_CTRL) & 0x80)==0) return 0;
       else return PEEK(KEY_DATA) & 0x7f;
@@ -104,3 +105,18 @@ byte woz_readkey() {
       return key;
    #endif
 }
+
+#ifdef APPLE1
+
+#include <stdlib.h> // for memcpy
+
+#define LOWRAM_START 0x280
+#define LOWRAM_END   0x7FF
+#define LOWRAM_SIZE  (LOWRAM_END - LOWRAM_START + 1)
+#define DATAINCODE   (0x8000 - LOWRAM_SIZE)
+
+inline void apple1_eprom_init() {
+   // copy the initializaton data from ROM to lowram where "Data" segment is allocated
+   memcpy(LOWRAM_START, DATAINCODE, LOWRAM_SIZE);
+}
+#endif
