@@ -17,7 +17,6 @@
 // TODO: solve division by counter_factor
 // TODO: interrupt and wait_interrupt()
 // TODO: better choice of colors for tiles
-// TODO: better initial fill/cls
 
 //
 // TETRIS for Apple1 + TMS9918 video card by P-LAB
@@ -107,7 +106,7 @@ byte piece_chars[NUMPIECES+1] = {
    EMPTY_GR_CHAR // space
 };
 byte piece_colors[NUMPIECES+1] = {
-   FG_BG( COLOR_GRAY         , COLOR_WHITE       ),  // L (orange in the original tetris)
+   FG_BG( COLOR_GREY         , COLOR_WHITE       ),  // L (orange in the original tetris)
    FG_BG( COLOR_LIGHT_BLUE   , COLOR_DARK_BLUE   ),  // J
    FG_BG( COLOR_MAGENTA      , COLOR_WHITE       ),  // T
    FG_BG( COLOR_CYAN         , COLOR_LIGHT_BLUE  ),  // I

@@ -44,7 +44,7 @@ const byte COLOR_DARK_YELLOW  = 0xA;
 const byte COLOR_LIGHT_YELLOW = 0xB;
 const byte COLOR_DARK_GREEN   = 0xC;
 const byte COLOR_MAGENTA      = 0xD;
-const byte COLOR_GRAY         = 0xE;
+const byte COLOR_GREY         = 0xE;
 const byte COLOR_WHITE        = 0xF;
 
 // macro for combining foreground and background into a single byte value

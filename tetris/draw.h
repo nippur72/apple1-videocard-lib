@@ -13,7 +13,7 @@
 #define BG_LIGHT_YELLOW "\x1c\x0B"
 #define BG_DARK_GREEN   "\x1c\x0C"
 #define BG_MAGENTA      "\x1c\x0D"
-#define BG_GRAY         "\x1c\x0E"
+#define BG_GREY         "\x1c\x0E"
 #define BG_WHITE        "\x1c\x0F"
 
 #define FG_TRANSPARENT  "\x1b\x00"
@@ -30,7 +30,7 @@
 #define FG_LIGHT_YELLOW "\x1b\xB0"
 #define FG_DARK_GREEN   "\x1b\xC0"
 #define FG_MAGENTA      "\x1b\xD0"
-#define FG_GRAY         "\x1b\xE0"
+#define FG_GREY         "\x1b\xE0"
 #define FG_WHITE        "\x1b\xF0"
 
 

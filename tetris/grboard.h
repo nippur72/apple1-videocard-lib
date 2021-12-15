@@ -7,7 +7,7 @@
 #define BOARD_CHAR_RIGHT 6
 
 #define CRUNCH_CHAR_1  13
-#define CRUNCH_COLOR_1 FG_BG(COLOR_BLACK, COLOR_GRAY)
+#define CRUNCH_COLOR_1 FG_BG(COLOR_BLACK, COLOR_GREY)
 
 #define CRUNCH_CHAR_2  32
 #define CRUNCH_COLOR_2 FG_BG(COLOR_BLACK, COLOR_BLACK)
@@ -110,7 +110,7 @@ void fillFrame(byte x, byte y, byte w, byte h, byte ch, byte color) {
 // draws the board
 void drawPlayground() {
    tms_set_color(COLOR_DARK_BLUE);
-   byte frame_color = FG_BG(COLOR_GRAY,COLOR_BLACK);
+   byte frame_color = FG_BG(COLOR_GREY,COLOR_BLACK);
    byte text_color  = FG_BG(COLOR_LIGHT_YELLOW,COLOR_BLACK);
 
    // draw tetris board
@@ -144,7 +144,7 @@ void drawPlayground() {
 // displays "game over" and waits for return key
 void gameOver() {
    byte color = FG_BG(COLOR_LIGHT_YELLOW, COLOR_BLACK);
-   byte frame_color = FG_BG(COLOR_GRAY,COLOR_BLACK);
+   byte frame_color = FG_BG(COLOR_GREY,COLOR_BLACK);
 
    byte y = (STARTBOARD_Y+BROWS)/2;
 
