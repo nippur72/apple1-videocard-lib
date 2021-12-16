@@ -1,17 +1,17 @@
 # apple1-videocard-lib
 
 Library and demos for the "Apple-1 Graphic Card" by P-LAB, 
-featuring the TMS9918 Video Display Processo by Texas Instruments.
+featuring the TMS9918 Video Display Processor by Texas Instruments.
 
 ## Repo structure
 
 ```
-demo     a demo program that makes use of the library
-docs     TMS9918 and Apple1 manuals
-kickc    target configuration files for KickC
-lib      the library files to include in your project
-tetris   a demo game
-tools    some build tools
+demo/     a demo program that makes use of the library
+docs/     TMS9918 and Apple-1 manuals
+kickc/    target configuration files for KickC
+lib/      the library files to include in your project
+tetris/   a demo game
+tools/    some build tools
 ```
 
 ## Introduction
@@ -22,12 +22,11 @@ with the "Apple-1 Graphic Card" board by [P-LAB]() or any
 other video card that maps the TMS9918 in the `$CC00`-`$CC01`
 memory range of the Apple-1.
 
-The library is written in C with [KickC](https://gitlab.com/camelot/kickc/-/releases)
-which is a very efficient 6502 C compiler.
+The library is written in C with [KickC](https://gitlab.com/camelot/kickc/-/releases), a very efficient 6502 C compiler.
 
 ## Choice of the screen mode
 
-The library only supports screen modes 1 and 2 (screen 0 and screen 3 not 
+The library supports screen modes 1 and 2 only (screen 0 and screen 3 not 
 being very useful). Both are 256x192 pixels but there are some differences 
 you should consider when evaluating which mode to use:
 
@@ -115,7 +114,7 @@ screen2_puts(16, 12, col, "HELLO");
 
 Some example code:
 ```c
-// writes the value 42 at the VRAM location 8000
+// writes the value 42 at VRAM location 8000
 tms_set_vram_write_addr(8000);
 TMS_WRITE_DATA_PORT(42);
 
@@ -125,7 +124,7 @@ byte val = TMS_READ_DATA_PORT;
 ```
 
 When using the default values that came with `SCREEN1_TABLE[]` and `SCREEN2_TABLE[]`,
-the VRAM is organized according the following memory map:
+VRAM is organized according the following memory map:
 ```c
 // ZONE                RANGE          NAME YOU CAN USE IN C
 // =========================================================== 
@@ -200,35 +199,35 @@ from the `lib/` directory in your C source files.
 Compile your sources with the KickC compiler, the `tools/`
 directory contains a `build.bat` script example for Windows.
 
-There are three configurations you can target with the KickC
-compiler switches `-t target -targetdir thisrepopath/kickc`:
+There are three configurations you can target with the switches `-t target -targetdir thisrepopath/kickc` of the KickC compiler:
 
-- apple1
-- apple1_jukebox
-- vic20
+- `apple1`
+- `apple1_jukebox`
+- `vic20`
 
 #### Target "apple1"
 
-With this target, the compiled program will start at `$280` in 
-the free RAM on the Apple-1 (please make sure you have enough RAM).
+With this target, the compiled program will start at `$0280` in 
+the free RAM of the Apple-1 (please make sure you have enough RAM).
 
-TODO: add reference to `hexdump.js`
+(TODO: add reference to `hexdump.js`)
 
 #### Target "apple1_jukebox"
 
-This target is for expansion Cards that provide a ROM storage in 
+This target is for expansion cards that provide a ROM storage in 
 the range `$4000`-`$7FFF`, as:
 - the "CodeTank" EEPROM daughterboard of the "Apple-1 Graphic Card"
 - "Juke-Box Card" FLASH
 
 In this target configuration, the program is split into two segments:
-- the "Code" that resides in ROM at `$4000`
-- the "Data" that resides in RAM at `$0280`
-(this because the program needs to change the "Data").
+- the `Code` that resides in ROM at `$4000`
+- the `Data` that resides in RAM at `$0280`
+
+The split is required because the program needs to write on the `Data` segment (e.g. when changing the value of a variable).
 
 The only issue is that the "Data" segment needs to be initialized 
-with the startup values (for example, the value that a global `int` variable 
-takes before it's used).
+with the correct startup values (for example, the value that 
+a global `int` variable takes before it's used).
 
 The "Data" initialization needs to be done manually in the C program 
 by explicitly calling `apple1_eprom_init()` in `main()`. The function 
