@@ -1,5 +1,3 @@
-// TODO make screen tables parametric (fixed values calculated by macros)
-
 #include "../lib/utils.h"
 #include "../lib/apple1.h"
 #include "../lib/tms9918.h"
@@ -38,8 +36,8 @@ void main() {
 
    byte key = 'H';
    for(;;) {
-           if(key == '1')  prova_screen1();
-      else if(key == '2')  prova_screen2();
+           if(key == '1')  demo_screen1();
+      else if(key == '2')  demo_screen2();
       else if(key == 'A')  demo_amiga_hand();
       else if(key == 'I')  demo_interrupt();
       else if(key == 'E')  flip_external_input();

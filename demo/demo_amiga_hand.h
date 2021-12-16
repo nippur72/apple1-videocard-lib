@@ -163,7 +163,7 @@ void demo_amiga_hand() {
    screen2_puts(0, 4, FG_BG(COLOR_BLACK,COLOR_WHITE), "READY.");
 
    for(word p=0;p<612;p+=4) {
-      vti_line(amiga_data[p],amiga_data[p+1],amiga_data[p+2],amiga_data[p+3]);
+      screen2_line(amiga_data[p],amiga_data[p+1],amiga_data[p+2],amiga_data[p+3]);
    }
    screen2_puts(18, 12, FG_BG(COLOR_DARK_BLUE, COLOR_WHITE), "APPLE1");
 }
