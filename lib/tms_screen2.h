@@ -1,34 +1,17 @@
-byte SCREEN2_TABLE[8] = {
-   0x02, 0xc0, 0x0e, 0xff, 0x03, 0x76, 0x03, 0x25
-};
+byte SCREEN2_TABLE[8] = { 0x02, 0xc0, 0x0e, 0xff, 0x03, 0x76, 0x03, 0x25 };
 
-// SCREEN 2 VALUES
-
-// pattern table:      $0000-$17FF   (256*8*3)
-// sprite patterns:    $1800-$19FF
-// color table:        $2000-$27FF   (256*8*3)
-// name table:         $3800-$3AFF   (32*24 = 256*3 = 768)
-// sprite attributes:  $3B00-$3BFF
-// unused              $3C00-$3FFF
-//
-
-const word SCREEN2_PATTERN_TABLE   = 0x0000;
-const word SCREEN2_NAME_TABLE      = 0x3800;
-const word SCREEN2_COLOR_TABLE     = 0x2000;
-const word SCREEN2_SPRITE_PATTERNS = 0x1800;
-const word SCREEN2_SPRITE_ATTRS    = 0x3b00;
-const word SCREEN2_SIZE            = (32*24);
+const word SCREEN2_SIZE = (32*24);
 
 // prepare the screen 2 to be used as a bitmap
 void screen2_init_bitmap(byte color) {
    // erase the first sprite pattern
-   tms_set_vram_write_addr(SCREEN2_SPRITE_PATTERNS);    // start writing in the sprite patterns
+   tms_set_vram_write_addr(TMS_SPRITE_PATTERNS);    // start writing in the sprite patterns
    for(byte i=0;i<8;i++) {
       TMS_WRITE_DATA_PORT(0);      NOP; 
    }
 
    // set all sprite coordinates to 0
-   tms_set_vram_write_addr(SCREEN2_SPRITE_ATTRS);       // start writing in the sprite attribute
+   tms_set_vram_write_addr(TMS_SPRITE_ATTRS);       // start writing in the sprite attribute
    for(byte i=0;i<32;i++) {
       TMS_WRITE_DATA_PORT(0);      NOP;  // y coordinate
       TMS_WRITE_DATA_PORT(0);      NOP;  // x coordinate
@@ -37,21 +20,21 @@ void screen2_init_bitmap(byte color) {
    }
 
    // fill pattern table with 0 (clear screen)
-   tms_set_vram_write_addr(SCREEN2_PATTERN_TABLE);
+   tms_set_vram_write_addr(TMS_PATTERN_TABLE);
    for(word i=768*8;i!=0;i--) {
       TMS_WRITE_DATA_PORT(0);
       NOP;
    }
 
    // fill color table with black on white
-   tms_set_vram_write_addr(SCREEN2_COLOR_TABLE);
+   tms_set_vram_write_addr(TMS_COLOR_TABLE);
    for(word i=768*8;i!=0;i--) {
       TMS_WRITE_DATA_PORT(color);  
       NOP;
    }
 
    // fills name table x3 with increasing numbers
-   tms_set_vram_write_addr(SCREEN2_NAME_TABLE);
+   tms_set_vram_write_addr(TMS_NAME_TABLE);
    for(word i=0;i<SCREEN2_SIZE;i++) {
       TMS_WRITE_DATA_PORT(i & 0xFF); 
       NOP;
@@ -61,8 +44,8 @@ void screen2_init_bitmap(byte color) {
 void screen2_putc(byte ch, byte x, byte y, byte col) {
    byte *source = &FONT[(word)(ch-32)*8];
    word addr = x*8 + y*256;
-   tms_set_vram_write_addr(SCREEN2_PATTERN_TABLE + addr); for(byte i=0;i<8;i++) TMS_WRITE_DATA_PORT(source[i]);
-   tms_set_vram_write_addr(SCREEN2_COLOR_TABLE   + addr); for(byte i=0;i<8;i++) TMS_WRITE_DATA_PORT(col);
+   tms_set_vram_write_addr(TMS_PATTERN_TABLE + addr); for(byte i=0;i<8;i++) TMS_WRITE_DATA_PORT(source[i]);
+   tms_set_vram_write_addr(TMS_COLOR_TABLE   + addr); for(byte i=0;i<8;i++) TMS_WRITE_DATA_PORT(col);
 }
 
 void screen2_puts(byte x, byte y, byte col, char *s) {
@@ -76,16 +59,16 @@ void screen2_puts(byte x, byte y, byte col, char *s) {
 #define PLOT_MODE_SET     1
 #define PLOT_MODE_INVERT  2
 
-byte SCREEN2_PLOT_MODE = PLOT_MODE_SET;
+byte screen2_plot_mode = PLOT_MODE_SET;
 
 void screen2_plot(byte x, byte y) {
    byte pow2_table_reversed[8] = { 128,64,32,16,8,4,2,1 };
-   word paddr = SCREEN2_PATTERN_TABLE + (word)(x & 0b11111000) + (word)(y & 0b11111000)*32 + y%8;
+   word paddr = TMS_PATTERN_TABLE + (word)(x & 0b11111000) + (word)(y & 0b11111000)*32 + y%8;
    tms_set_vram_read_addr(paddr);
    byte data = TMS_READ_DATA_PORT;
    byte mask = pow2_table_reversed[x%8];
    tms_set_vram_write_addr(paddr);
-   switch(SCREEN2_PLOT_MODE) {
+   switch(screen2_plot_mode) {
       case PLOT_MODE_RESET:
          data &= ~mask;
          break;
@@ -105,7 +88,7 @@ signed int vti_abs(signed int x) {
 }
 
 // http://members.chello.at/~easyfilter/bresenham.html
-void vti_line(byte _x0, byte _y0, byte _x1, byte _y1) {
+void screen2_line(byte _x0, byte _y0, byte _x1, byte _y1) {
 
    signed int x0 = (signed int) _x0;
    signed int x1 = (signed int) _x1;
