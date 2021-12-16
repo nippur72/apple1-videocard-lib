@@ -1,13 +1,14 @@
 {
     "extension": "prg",
-    "link": "apple1.ld",
-    "start_address": "0x280",
+    "link": "apple1_jukebox.ld",
+    "start_address": "0x4000",
     "cpu": "MOS6502X",
     "interrupt": "hardware_all",
     "emulator": "x64sc",
     "defines": {
         "__APPLE1__": 1,
-        "APPLE1": 1
+        "APPLE1": 1,
+        "APPLE1_JUKEBOX": 1
     }
 }
 

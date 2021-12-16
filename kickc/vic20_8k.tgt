@@ -7,6 +7,7 @@
     "interrupt": "rom_min_vic20",
     "emulator": "xvic",
     "defines": {
-        "__VIC20__": 1
+        "__VIC20__": 1,
+        "VIC20": 1
     }
 }
