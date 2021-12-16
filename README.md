@@ -245,7 +245,7 @@ $0280-$0FFF RAM: C program "Data" segment
 $4000-$7581 ROM: C program "Code" segment 
 $7582-$7FFF ROM: C program "Data" segment (startup values)
 
-# Target "vic20"
+#### Target "vic20"
 
 This target has been used during the development of the library
 where a custom made VIC-20 emulator was interfaced with 
