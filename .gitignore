@@ -4,3 +4,7 @@
 *.vs
 *.dbg
 *.asm
+*.woz
+*.bin
+bug/*
+cc65/*

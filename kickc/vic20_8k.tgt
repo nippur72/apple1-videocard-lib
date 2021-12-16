@@ -1,0 +1,12 @@
+{
+    "description": "Commodore VIC 20 8K executable PRG file",
+    "extension": "prg",
+    "link": "vic20_8k.ld",
+    "start_address": "0x120d",
+    "cpu": "MOS6502X",
+    "interrupt": "rom_min_vic20",
+    "emulator": "xvic",
+    "defines": {
+        "__VIC20__": 1
+    }
+}
