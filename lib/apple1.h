@@ -1,6 +1,5 @@
 #ifdef APPLE1
-   // APPLE1
-   #pragma start_address(0x4000)
+   // APPLE1   
    const word WOZMON    = 0xFF1F;      // enters monitor
    const word ECHO      = 0xFFEF;      // output ascii character in A (A not destroyed)
    const word PRBYTE    = 0xFFDC;      // print hex byte in A (A destroyed)
