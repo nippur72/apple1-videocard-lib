@@ -25,13 +25,7 @@
 
 // TODO solve division by counter_factor
 
-#include "../lib/utils.h"
-#include "../lib/apple1.h"
 #include "../lib/tms9918.h"
-#include "../lib/font8x8.h"
-#include "../lib/tms_screen1.h"
-#include "../lib/tms_screen2.h"
-#include "../lib/interrupt.h"
 
 #include "draw.h"
 #include "pieces.h"

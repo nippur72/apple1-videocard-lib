@@ -1,10 +1,4 @@
-#include "../lib/utils.h"
-#include "../lib/apple1.h"
 #include "../lib/tms9918.h"
-#include "../lib/font8x8.h"
-#include "../lib/tms_screen1.h"
-#include "../lib/tms_screen2.h"
-#include "../lib/interrupt.h"
 
 #include "demo_screen1.h"
 #include "demo_screen2.h"

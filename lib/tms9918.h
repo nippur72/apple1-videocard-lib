@@ -5,10 +5,11 @@
 // TODO do fonts need to start from 32 or 0?
 // TODO sprite routines
 // TODO test the interrupt routines
-// TODO provide a single .h file (tms_lib.h or tms9918.h?)
 // TODO finalize hexdump.js and update README.md
 
 #pragma encoding(ascii)    // encode strings in plain ascii
+
+#include "utils.h"
 
 #ifdef APPLE1
    const byte *VDP_DATA = 0xCC00;       // TMS9918 data port (VRAM)
@@ -153,3 +154,9 @@ void tms_set_external_video(byte val) {
    if(val) regvalue |= REG0_EXTVID_MASK;
    tms_write_reg(0, regvalue);
 }
+
+#include "apple1.h"
+#include "font8x8.h"
+#include "tms_screen1.h"
+#include "tms_screen2.h"
+#include "interrupt.h"

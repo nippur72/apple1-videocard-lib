@@ -193,7 +193,7 @@ while(1) {
 
 ### Building the source code
 
-To link the library, simply `#include` the `.h` files 
+To link the library, simply `#include` the `tms9918.h` file 
 from the `lib/` directory in your C source files.
 
 Compile your sources with the KickC compiler, the `tools/`
