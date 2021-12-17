@@ -8,6 +8,7 @@
 // TODO finalize hexdump.js and update README.md
 // TODO allow redefinition of I/O ports
 // TODO wait_end_of_frame() 
+// TODO screen1() and screen2() helpers
 
 #pragma encoding(ascii)    // encode strings in plain ascii
 
@@ -157,7 +158,7 @@ void tms_set_external_video(byte val) {
    tms_write_reg(0, regvalue);
 }
 
-void tms_wait_end_of_frame() {
+inline void tms_wait_end_of_frame() {
    while(!FRAME_BIT(TMS_READ_CTRL_PORT));
 }
 

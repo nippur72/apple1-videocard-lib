@@ -6,6 +6,7 @@
 #include "demo_interrupt.h"
 #include "demo_extvid.h"
 #include "demo_blank.h"
+#include "demo_end_of_frame.h"
 
 void help() {
    woz_puts(
@@ -16,6 +17,7 @@ void help() {
       "A AMIGA HAND\r"
       "I INTERRUPT\r"
       "E FLIP EXT VIDEO\r"
+      "F TEST END-OF-FRAME\r"
       "B BLANK ON/OFF\r"
       "H HELP\r"
       "0 EXITS\r\r"
@@ -35,6 +37,7 @@ void main() {
       else if(key == 'A')  demo_amiga_hand();
       else if(key == 'I')  demo_interrupt();
       else if(key == 'E')  flip_external_input();
+      else if(key == 'F')  demo_end_of_frame();
       else if(key == 'B')  flip_blank();
       else if(key == 'H')  help();
       else if(key == '0')  break;
