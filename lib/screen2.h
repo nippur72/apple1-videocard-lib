@@ -4,20 +4,8 @@ const word SCREEN2_SIZE = (32*24);
 
 // prepare the screen 2 to be used as a bitmap
 void screen2_init_bitmap(byte color) {
-   // erase the first sprite pattern
-   tms_set_vram_write_addr(TMS_SPRITE_PATTERNS);    // start writing in the sprite patterns
-   for(byte i=0;i<8;i++) {
-      TMS_WRITE_DATA_PORT(0);      NOP; 
-   }
-
-   // set all sprite coordinates to 0
-   tms_set_vram_write_addr(TMS_SPRITE_ATTRS);       // start writing in the sprite attribute
-   for(byte i=0;i<32;i++) {
-      TMS_WRITE_DATA_PORT(0);      NOP;  // y coordinate
-      TMS_WRITE_DATA_PORT(0);      NOP;  // x coordinate
-      TMS_WRITE_DATA_PORT(0);      NOP;  // name
-      TMS_WRITE_DATA_PORT(i);      NOP;  // color
-   }
+   // erases all the sprites
+   tms_clear_sprites();
 
    // fill pattern table with 0 (clear screen)
    tms_set_vram_write_addr(TMS_PATTERN_TABLE);

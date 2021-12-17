@@ -159,6 +159,7 @@ void tms_set_external_video(byte val) {
 
 #include "apple1.h"
 #include "font8x8.h"
+#include "sprites.h"
 #include "tms_screen1.h"
 #include "tms_screen2.h"
 #include "interrupt.h"

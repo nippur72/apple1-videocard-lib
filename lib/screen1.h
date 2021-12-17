@@ -51,6 +51,9 @@ void screen1_prepare() {
    // fill name table with spaces (32)
    screen1_cls();
 
+   // clear all the sprites
+   tms_clear_sprites();
+
    // fill pattern table with 0
    tms_set_vram_write_addr(TMS_PATTERN_TABLE);
    for(word i=256*8;i!=0;i--) {
