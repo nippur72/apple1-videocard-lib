@@ -6,6 +6,8 @@
 // TODO sprite routines
 // TODO test the interrupt routines
 // TODO finalize hexdump.js and update README.md
+// TODO allow redefinition of I/O ports
+// TODO wait_end_of_frame() 
 
 #pragma encoding(ascii)    // encode strings in plain ascii
 
