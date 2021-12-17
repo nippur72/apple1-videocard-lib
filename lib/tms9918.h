@@ -88,8 +88,8 @@ const word TMS_SPRITE_PATTERNS = 0x1800;
 // read/write to TMS9918 macros
 #define TMS_WRITE_CTRL_PORT(a)    (*VDP_REG=(byte)(a))
 #define TMS_WRITE_DATA_PORT(a)    (*VDP_DATA=(byte)(a))
-#define TMS_READ_CTRL_PORT        (*VDP_REG);
-#define TMS_READ_DATA_PORT        (*VDP_DATA);
+#define TMS_READ_CTRL_PORT        (*VDP_REG)
+#define TMS_READ_DATA_PORT        (*VDP_DATA)
 
 // buffer containing the last register values, because TMS registers are write only
 byte tms_regs_latch[8];
