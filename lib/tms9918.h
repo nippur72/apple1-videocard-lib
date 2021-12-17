@@ -157,9 +157,13 @@ void tms_set_external_video(byte val) {
    tms_write_reg(0, regvalue);
 }
 
+void tms_wait_end_of_frame() {
+   while(!FRAME_BIT(TMS_READ_CTRL_PORT));
+}
+
 #include "apple1.h"
 #include "font8x8.h"
 #include "sprites.h"
-#include "tms_screen1.h"
-#include "tms_screen2.h"
+#include "screen1.h"
+#include "screen2.h"
 #include "interrupt.h"
