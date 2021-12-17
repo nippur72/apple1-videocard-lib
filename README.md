@@ -6,12 +6,13 @@ featuring the TMS9918 Video Display Processor by Texas Instruments.
 ## Repo structure
 
 ```
-demo/     a demo program that makes use of the library
+demos/
+   demo/     demo program that makes use of the library
+   picshow/  demo program that shows a picture in bitmap mode
+   tetris/   a game
 docs/     TMS9918 and Apple-1 manuals
 kickc/    target configuration files for KickC
 lib/      the library files to include in your project
-picshow/  a demo program showing a picture in bitmap mode
-tetris/   a demo game
 tools/    some build tools
 ```
 
