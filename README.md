@@ -10,10 +10,10 @@ demos/
    demo/     demo program that makes use of the library
    picshow/  demo program that shows a picture in bitmap mode
    tetris/   a game
-docs/     TMS9918 and Apple-1 manuals
-kickc/    target configuration files for KickC
-lib/      the library files to include in your project
-tools/    some build tools
+docs/        TMS9918 and Apple-1 manuals
+kickc/       target configuration files for KickC
+lib/         the library files to include in your project
+tools/       some build tools
 ```
 
 ## Introduction
