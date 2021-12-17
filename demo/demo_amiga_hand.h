@@ -158,12 +158,12 @@ void demo_amiga_hand() {
    tms_init_regs(SCREEN2_TABLE);
    screen2_init_bitmap(FG_BG(COLOR_BLACK,COLOR_WHITE));
 
-   screen2_puts(0, 0, FG_BG(COLOR_BLACK,COLOR_WHITE), "*** P-LAB  VIDEO CARD SYSTEM ***");
-   screen2_puts(0, 2, FG_BG(COLOR_BLACK,COLOR_WHITE), "16K VRAM BYTES FREE");
-   screen2_puts(0, 4, FG_BG(COLOR_BLACK,COLOR_WHITE), "READY.");
+   screen2_puts("*** P-LAB  VIDEO CARD SYSTEM ***", 0, 0, FG_BG(COLOR_BLACK,COLOR_WHITE));
+   screen2_puts("16K VRAM BYTES FREE"             , 0, 2, FG_BG(COLOR_BLACK,COLOR_WHITE));
+   screen2_puts("READY."                          , 0, 4, FG_BG(COLOR_BLACK,COLOR_WHITE));
 
    for(word p=0;p<612;p+=4) {
       screen2_line(amiga_data[p],amiga_data[p+1],amiga_data[p+2],amiga_data[p+3]);
    }
-   screen2_puts(18, 12, FG_BG(COLOR_DARK_BLUE, COLOR_WHITE), "APPLE1");
+   screen2_puts("APPLE1", 18, 12, FG_BG(COLOR_DARK_BLUE, COLOR_WHITE));
 }

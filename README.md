@@ -104,7 +104,7 @@ byte col = FB_BG(COLOR_DARK_RED,COLOR_LIGH_YELLOW);
 screen2_putc('A', 31, 23, col);
 
 // writes a string
-screen2_puts(16, 12, col, "HELLO");
+screen2_puts("HELLO", 16, 12, col);
 
 // note: screen2_putc() and screen2_puts() are fast but they
 // can only print characters aligned within the 8x8 grid

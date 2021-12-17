@@ -48,7 +48,7 @@ void screen2_putc(byte ch, byte x, byte y, byte col) {
    tms_set_vram_write_addr(TMS_COLOR_TABLE   + addr); for(byte i=0;i<8;i++) TMS_WRITE_DATA_PORT(col);
 }
 
-void screen2_puts(byte x, byte y, byte col, char *s) {
+void screen2_puts(char *s, byte x, byte y, byte col) {
    byte c;
    while(c=*s++) {
       screen2_putc(c, x++, y, col);
