@@ -1,0 +1,2 @@
+@call ..\..\tools\build demo
+

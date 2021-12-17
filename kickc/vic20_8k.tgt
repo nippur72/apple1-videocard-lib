@@ -8,6 +8,7 @@
     "emulator": "xvic",
     "defines": {
         "__VIC20__": 1,
-        "VIC20": 1
+        "VIC20": 1,
+        "__KICKC__": 1
     }
 }

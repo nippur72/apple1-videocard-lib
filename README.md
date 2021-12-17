@@ -206,13 +206,19 @@ while(1) {
 
 ### Building the source code
 
-To link the library, simply `#include` the `tms9918.h` file 
-from the `lib/` directory in your C source files.
+To link the library, simply `#include` the `tms9918.h` file
+in your C sources. The recommended way is to add the KickC
+command line switch `-includedir=thisrepo/lib` to your
+build script and then include the file with `#include <tms9918.h>`.
 
-Compile your sources with the KickC compiler, the `tools/`
-directory contains a `build.bat` script example for Windows.
+The the `tools/` directory contains a simple `build.bat` script
+example (for Windows) that you can customize to your needs.
 
-There are three configurations you can target with the switches `-t target -targetdir thisrepopath/kickc` of the KickC compiler:
+### Setting a machine target
+
+There are three configurations you can target with
+the switches `-t target -targetdir thisrepo/kickc`
+of the KickC compiler:
 
 - `apple1`
 - `apple1_jukebox`

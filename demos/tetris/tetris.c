@@ -25,7 +25,7 @@
 
 // TODO solve division by counter_factor
 
-#include "../lib/tms9918.h"
+#include <tms9918.h>
 
 #include "draw.h"
 #include "pieces.h"

@@ -1,4 +1,4 @@
-#include "../lib/tms9918.h"
+#include <tms9918.h>
 
 #include "demo_screen1.h"
 #include "demo_screen2.h"

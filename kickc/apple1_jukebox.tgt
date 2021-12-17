@@ -8,7 +8,8 @@
     "defines": {
         "__APPLE1__": 1,
         "APPLE1": 1,
-        "APPLE1_JUKEBOX": 1
+        "APPLE1_JUKEBOX": 1,
+        "__KICKC__": 1
     }
 }
 
