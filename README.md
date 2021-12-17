@@ -164,6 +164,18 @@ byte value = TMS_READ_CTRL_PORT;  // reads the status register ($CC01)
 byte value = TMS_READ_DATA_PORT;  // reads a byte from the data port ($CC00)
 ```
 
+### Miscellaneous functions
+
+```
+tms_wait_end_of_frame();   // waits the end of video frame, for timimng or sync video updates
+tms_set_blank(1);          // turns on video blanking (0 restores normal view)
+tms_set_external_video(1); // turns on/off external video input
+
+tms_set_interrupt_bit(1);  // enable end of frame interrupts generation
+
+(TODO: interrupt functions)
+```
+
 ### Apple-1 utility functions
 
 There are also utility functions to interact with the Apple-1
