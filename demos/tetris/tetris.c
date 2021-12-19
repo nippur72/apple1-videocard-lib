@@ -1,9 +1,3 @@
-// TODO-KICKC: NPE when -t VIC20_8K is missing
-// TODO-KICKC: NPE when array initializer contains unesisting macro
-// TODO-KICKC: #include "keyboard.h" switches to c64 ?
-// TODO-KICKC: conflict parameter if prototype has different parameter names
-// TODO-KICKC: missing fragment: int x = pl->x + data[t].offset_x; oppure int x = pl->x + d->offset_x;
-
 // TODO: solve division by counter_factor
 // TODO: interrupt and wait_interrupt()
 
