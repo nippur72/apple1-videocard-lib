@@ -8,3 +8,4 @@
 *.bin
 bug/*
 cc65/*
+.vscode/*

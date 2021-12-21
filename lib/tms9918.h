@@ -1,4 +1,18 @@
+// TODO a bitmapped text writing routine (double size ecc)
+// TODO console like text output in screen 2
+// TODO more fonts (C64 and PET/VIC20)
+// TODO how to switch fonts?
+// TODO do fonts need to start from 32 or 0?
+// TODO sprite routines
+// TODO test the interrupt routines
+// TODO finalize hexdump.js and update README.md
+// TODO allow redefinition of I/O ports
+// TODO wait_end_of_frame() 
+// TODO screen1() and screen2() helpers
+
 #pragma encoding(ascii)    // encode strings in plain ascii
+
+#include "utils.h"
 
 #ifdef APPLE1
    const byte *VDP_DATA = 0xCC00;       // TMS9918 data port (VRAM)
@@ -47,6 +61,22 @@ const byte COLOR_MAGENTA      = 0xD;
 const byte COLOR_GREY         = 0xE;
 const byte COLOR_WHITE        = 0xF;
 
+// The library has a fixed VRAM memory layout valid for SCREEN 1 and 2 
+// 
+// pattern table:      $0000-$17FF   (256*8*3)
+// sprite patterns:    $1800-$19FF
+// color table:        $2000-$27FF   (256*8*3)
+// name table:         $3800-$3AFF   (32*24 = 256*3 = 768)
+// sprite attributes:  $3B00-$3BFF
+// unused              $3C00-$3FFF
+//
+
+const word TMS_NAME_TABLE      = 0x3800; 
+const word TMS_COLOR_TABLE     = 0x2000; 
+const word TMS_PATTERN_TABLE   = 0x0000; 
+const word TMS_SPRITE_ATTRS    = 0x3b00; 
+const word TMS_SPRITE_PATTERNS = 0x1800; 
+
 // macro for combining foreground and background into a single byte value
 #define FG_BG(f,b)          (((f)<<4)|(b))
 
@@ -59,8 +89,16 @@ const byte COLOR_WHITE        = 0xF;
 // read/write to TMS9918 macros
 #define TMS_WRITE_CTRL_PORT(a)    (*VDP_REG=(byte)(a))
 #define TMS_WRITE_DATA_PORT(a)    (*VDP_DATA=(byte)(a))
-#define TMS_READ_CTRL_PORT        (*VDP_REG);
-#define TMS_READ_DATA_PORT        (*VDP_DATA);
+#define TMS_READ_CTRL_PORT        (*VDP_REG)
+#define TMS_READ_DATA_PORT        (*VDP_DATA)
+
+// buffer containing the last register values, because TMS registers are write only
+byte tms_regs_latch[8];
+
+// cursor coordinates for the console functions
+byte tms_cursor_x;
+byte tms_cursor_y;
+byte tms_reverse;
 
 // sets the VRAM address on the TMS9918 for a write operation
 void tms_set_vram_write_addr(word addr) {
@@ -73,9 +111,6 @@ void tms_set_vram_read_addr(word addr) {
    TMS_WRITE_CTRL_PORT(LOBYTE(addr));
    TMS_WRITE_CTRL_PORT((HIBYTE(addr) & HIADDRESS_MASK)|READ_FROM_VRAM);
 }
-
-// buffer containing the last register values, because TMS registers are write only
-byte tms_regs_latch[8];
 
 // writes a value to a TMS9918 register (0-7)
 void tms_write_reg(byte regnum, byte val) {
@@ -122,3 +157,14 @@ void tms_set_external_video(byte val) {
    if(val) regvalue |= REG0_EXTVID_MASK;
    tms_write_reg(0, regvalue);
 }
+
+inline void tms_wait_end_of_frame() {
+   while(!FRAME_BIT(TMS_READ_CTRL_PORT));
+}
+
+#include "apple1.h"
+#include "font8x8.h"
+#include "sprites.h"
+#include "screen1.h"
+#include "screen2.h"
+#include "interrupt.h"

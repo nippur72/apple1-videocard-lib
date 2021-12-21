@@ -5,3 +5,10 @@
 #define LOBYTE(c) (<(c))
 
 #define NOP asm { nop }
+
+#ifndef __KICKC__
+// KickC defaults these, while other C compilers do not
+// this makes syntax highlight work in common C editors
+typedef unsigned char byte;
+typedef unsigned int  word;
+#endif
