@@ -206,13 +206,13 @@ void gr_erasepiece_unmarked(sprite *p) {
 
    px += STARTBOARD_X;
    py += STARTBOARD_Y;
-   
+      
    for(byte t=0; t<4; t++) {
-      int x = px + data->offset_x;
-      int y = py + data->offset_y;
+      int x = px; byte x1 = data->offset_x; x+= (int) x1; 
+      int y = py; byte y1 = data->offset_y; y+= (int) y1;
 
-      int cx = zx + data->offset_x;      
-      int cy = zy + data->offset_y;
+      int cx = p->x; cx += (int) x1;      
+      int cy = p->y; cy += (int) y1;
 
       data++;
 

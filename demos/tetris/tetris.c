@@ -152,13 +152,13 @@ void handle_player_input() {
          if(collides(&new_pos)) {
             break;
          }         
-         gr_erasepiece(&player);
-         gr_drawpiece(&new_pos);
+         // gr_erasepiece(&player);
+         // gr_drawpiece(&new_pos);
 
          // flicker-free version      
-         // ck_markpiece(&new_pos);           
-         // gr_erasepiece_unmarked(&player);  
-         // gr_drawpiece(&new_pos);           
+         ck_markpiece(&new_pos);           
+         gr_erasepiece_unmarked(&player);  
+         gr_drawpiece(&new_pos);           
 
          ck_drawpiece(&new_pos);
          sprite_copy(&player,&new_pos);
@@ -168,13 +168,13 @@ void handle_player_input() {
    }
 
    if(allowed == 1) {
-      gr_erasepiece(&player);
-      gr_drawpiece(&new_pos);
+      // gr_erasepiece(&player);
+      // gr_drawpiece(&new_pos);
 
       // flicker-free version      
-      // ck_markpiece(&new_pos);           
-      // gr_erasepiece_unmarked(&player);  
-      // gr_drawpiece(&new_pos);           
+      ck_markpiece(&new_pos);           
+      gr_erasepiece_unmarked(&player);  
+      gr_drawpiece(&new_pos);           
 
       sprite_copy(&player, &new_pos);
    }
@@ -207,13 +207,13 @@ void gameLoop() {
          }
          else {
             // automatic drop does not collide, simply draw it
-            gr_erasepiece(&player);   // erase and draw are as close as possible
-            gr_drawpiece(&new_pos);
+            // gr_erasepiece(&player);   // erase and draw are as close as possible
+            // gr_drawpiece(&new_pos);
 
             // flicker-free version      
-            // ck_markpiece(&new_pos);           
-            // gr_erasepiece_unmarked(&player);  
-            // gr_drawpiece(&new_pos);           
+            ck_markpiece(&new_pos);           
+            gr_erasepiece_unmarked(&player);  
+            gr_drawpiece(&new_pos);           
 
             sprite_copy(&player, &new_pos);   
             ck_drawpiece(&player);          
