@@ -4,7 +4,7 @@
 @SET TMS9918=..\..
 
 @echo ======================== VIC20 ===================================================
-call kickc -includedir %TMS9918%\lib -targetdir %TMS9918%\kickc\ -t VIC20_8K %TARGET%.c -o out\%TARGET%_vic20.prg -e
+call kickc -includedir %TMS9918%\lib -targetdir %TMS9918%\kickc\ -t vic20_8k %TARGET%.c -o out\%TARGET%_vic20.prg -e
 copy out\%TARGET%.prg out\%TARGET%_vic20.prg
 
 @echo ======================== APPLE 1 =================================================
