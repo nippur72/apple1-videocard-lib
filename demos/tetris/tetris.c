@@ -66,8 +66,8 @@ word drop_counter_max;   // maximum value of the counter
 
 unsigned long score;          // player's score 
 unsigned int level;           // level 
-unsigned int lines_remaining; // lines to complete the level 
 unsigned int total_lines;     // total number of lines 
+int lines_remaining;          // lines to complete the level 
 
 // game files
 #include "pieces.h"
@@ -259,7 +259,7 @@ void check_crunched_lines() {
    score += (unsigned long) s;
 
    // score += scores[num_lines_crunched] * (level+1);
-   lines_remaining -= num_lines_crunched;
+   lines_remaining -= (int) num_lines_crunched;
    total_lines += num_lines_crunched;
 
    // advance level
