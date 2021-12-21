@@ -9,15 +9,16 @@
 #define BCOLS 10                   // number of board columns
 #define BROWS 20                   // number of board rows
 #define EMPTY NUMPIECES            // the empty character is the character after all tetrominoes
+#define MARKED 255                 // mark position on the board while moving (to reduce flickering)
 
 // TODO KickC doesn't allow double arrays[][]
 
 //byte board[32 /*BROWS*/ ][16 /*BCOLS*/];          // the board
 byte board[16*BROWS];
 
-#define BOARD_INDEX(x,y) (((int)(y))*16+((int)(x)))
-#define WRITE_BOARD(x,y,c) board[BOARD_INDEX(x,y)]=(c)
-#define READ_BOARD(x,y)    board[BOARD_INDEX(x,y)]
+#define BOARD_INDEX(y,x)   (((int)(y))*16+((int)(x)))
+#define WRITE_BOARD(y,x,c) board[BOARD_INDEX(y,x)]=(c)
+#define READ_BOARD(y,x)    board[BOARD_INDEX(y,x)]
 
 // prototypes
 void ck_init();
@@ -45,7 +46,7 @@ void ck_drawpiece(sprite *pl) {
       int x = pl->x + d->offset_x;
       int y = pl->y + d->offset_y;
       */
-      WRITE_BOARD(x,y,pl->piece);
+      WRITE_BOARD(y,x,pl->piece);
       data++;
    }
 }
@@ -60,7 +61,22 @@ void ck_erasepiece(sprite *pl) {
       int x = pl->x + (int) data->offset_x;
       int y = pl->y + (int) data->offset_y;
       */
-      WRITE_BOARD(x,y,EMPTY);
+      WRITE_BOARD(y,x,EMPTY);
+      data++;
+   }   
+}
+
+// draw a piece on the check board, marking it with high bit set
+void ck_markpiece(sprite *pl) {
+   tile_offset *data = get_piece_offsets(pl->piece, pl->angle);   
+   for(byte t=0; t<4; t++) {
+      int x = pl->x;  byte x1 = data->offset_x; x+= (int) x1;
+      int y = pl->y;  byte y1 = data->offset_y; y+= (int) y1;
+      /*
+      int x = pl->x + (int) data->offset_x;
+      int y = pl->y + (int) data->offset_y;
+      */
+      WRITE_BOARD(y,x,MARKED);
       data++;
    }   
 }
@@ -77,7 +93,7 @@ int collides(sprite *pl) {
       if(x<0) return 1;                  // does it collide with left border?
       if(x>=BCOLS) return 1;             // does it collide with right border?
       if(y>=BROWS) return 1;             // does it collide with bottom? 
-      if(READ_BOARD(x,y) != EMPTY) return 1; // does it collide with something?
+      if(READ_BOARD(y,x) != EMPTY) return 1; // does it collide with something?
       data++;
    }
    return 0;
@@ -86,7 +102,7 @@ int collides(sprite *pl) {
 // returns 1 if the line is all filled
 byte is_line_filled(byte line) {
    for(byte t=0;t<BCOLS;t++) {
-      if(READ_BOARD(t,line)==EMPTY) return 0;
+      if(READ_BOARD(line,t)==EMPTY) return 0;
    }
    return 1;
 }
@@ -94,7 +110,7 @@ byte is_line_filled(byte line) {
 // fills the specified line with an empty character 
 void ck_erase_line(byte line) {
    for(byte t=0; t<BCOLS; t++) {
-      WRITE_BOARD(t,line,EMPTY);
+      WRITE_BOARD(line,t,EMPTY);
    }
 }
 
@@ -102,7 +118,7 @@ void ck_erase_line(byte line) {
 void ck_scroll_down(byte endline) {
    for(byte line=endline;line>0;line--) {
       for(byte x=0;x<BCOLS;x++) {
-         WRITE_BOARD(x,line,READ_BOARD(x,line-1));
+         WRITE_BOARD(line,x,READ_BOARD(line-1,x));
       }
    }
    // clears the top line

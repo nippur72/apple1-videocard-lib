@@ -195,6 +195,33 @@ void gr_erasepiece(sprite *p) {
    }
 }
 
+// erase piece from the screen
+void gr_erasepiece_unmarked(sprite *p) {
+   tile_offset *data = get_piece_offsets(p->piece, p->angle);
+   int px = p->x;
+   int py = p->y;
+
+   int zx = px;
+   int zy = py;
+
+   px += STARTBOARD_X;
+   py += STARTBOARD_Y;
+   
+   for(byte t=0; t<4; t++) {
+      int x = px + data->offset_x;
+      int y = py + data->offset_y;
+
+      int cx = zx + data->offset_x;      
+      int cy = zy + data->offset_y;
+
+      data++;
+
+      if(READ_BOARD(cy,cx) != MARKED) {
+         draw_tile((byte)x,(byte)y,EMPTY_GR_CHAR,EMPTY_GR_COLOR);
+      }
+   }
+}
+
 // draw a piece on the screen
 void gr_drawpiece(sprite *p) {
    tile_offset *data = get_piece_offsets(p->piece, p->angle);
@@ -237,7 +264,7 @@ void gr_update_board() {
    byte tile,ch,col;
    for(byte line=0;line<BROWS;line++) {
       for(byte column=0;column<BCOLS;column++) {
-         tile = READ_BOARD(column,line);
+         tile = READ_BOARD(line,column);
          ch = piece_chars[tile];
          col = piece_colors[tile];         
          draw_tile(STARTBOARD_X+column, STARTBOARD_Y+line, ch, col);
