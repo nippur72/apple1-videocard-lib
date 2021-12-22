@@ -55,8 +55,9 @@ void screen2_puts(char *s, byte x, byte y, byte col) {
 
 byte screen2_plot_mode = PLOT_MODE_SET;
 
+byte pow2_table_reversed[8] = { 128,64,32,16,8,4,2,1 };
+
 void screen2_plot(byte x, byte y) {
-   byte pow2_table_reversed[8] = { 128,64,32,16,8,4,2,1 };
    word paddr = TMS_PATTERN_TABLE + (word)(x & 0b11111000) + (word)(y & 0b11111000)*32 + y%8;
    tms_set_vram_read_addr(paddr);
    byte data = TMS_READ_DATA_PORT;
@@ -76,6 +77,13 @@ void screen2_plot(byte x, byte y) {
    TMS_WRITE_DATA_PORT(data);
 }
 
+byte screen2_point(byte x, byte y) {
+   word paddr = TMS_PATTERN_TABLE + (word)(x & 0b11111000) + (word)(y & 0b11111000)*32 + y%8;
+   tms_set_vram_read_addr(paddr);
+   byte data = TMS_READ_DATA_PORT;
+   byte mask = pow2_table_reversed[x%8];
+   return (data & mask) != 0 ? 1 : 0;
+}
 
 signed int math_abs(signed int x) {
     return x < 0 ? -x : x;
@@ -106,11 +114,12 @@ void screen2_line(byte _x0, byte _y0, byte _x1, byte _y1) {
    }
 }
 
+#define mul(a,b) ((signed long)mulf16s((signed int)(a),(signed int)(b)))
 
 // http://members.chello.at/~easyfilter/bresenham.html
-/* TODO: FIX THIS, IT DOES NOT DRAW AN ELLIPSE
 void screen2_ellipse_rect(byte _x0, byte _y0, byte _x1, byte _y1)
 {
+/*
    if (tms_global_mulf_initialized == 0) {
       mulf_init();
       tms_global_mulf_initialized = 1;
@@ -153,8 +162,8 @@ void screen2_ellipse_rect(byte _x0, byte _y0, byte _x1, byte _y1)
     }
     
 }
+   }
 */
-
 
 // http://members.chello.at/~easyfilter/bresenham.html
 void screen2_circle(byte _xm, byte _ym, byte _r) {

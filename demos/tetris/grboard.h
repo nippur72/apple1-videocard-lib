@@ -188,8 +188,8 @@ void gr_erasepiece(sprite *p) {
    }
    
    for(byte t=0; t<4; t++) {
-      int x = px + data->offset_x;
-      int y = py + data->offset_y;
+      int x = px + (int) data->offset_x;
+      int y = py + (int) data->offset_y;
       data++;
       draw_tile((byte)x,(byte)y,EMPTY_GR_CHAR,EMPTY_GR_COLOR);
    }
@@ -208,11 +208,19 @@ void gr_erasepiece_unmarked(sprite *p) {
    py += STARTBOARD_Y;
       
    for(byte t=0; t<4; t++) {
-      int x = px; byte x1 = data->offset_x; x+= (int) x1; 
-      int y = py; byte y1 = data->offset_y; y+= (int) y1;
+      #ifdef BUG736
+         int x = px; byte x1 = data->offset_x; x+= (int) x1;
+         int y = py; byte y1 = data->offset_y; y+= (int) y1;
 
-      int cx = p->x; cx += (int) x1;      
-      int cy = p->y; cy += (int) y1;
+         int cx = p->x; cx += (int) x1;
+         int cy = p->y; cy += (int) y1;
+      #else
+         int x = px + (int) data->offset_x;
+         int y = py + (int) data->offset_y;
+
+         int cx = p->x + (int) data->offset_x;
+         int cy = p->y + (int) data->offset_y;
+      #endif
 
       data++;
 
@@ -240,15 +248,17 @@ void gr_drawpiece(sprite *p) {
 
    byte piece = p->piece;
    for(byte t=0; t<4; t++) {
-      int x = px;  byte x1 = data->offset_x; x+= (int) x1;
-      int y = py;  byte y1 = data->offset_y; y+= (int) y1;
+      #ifdef BUG736
+         int x = px + (int) data->offset_x;
+         int y = py + (int) data->offset_y;
+      else
+         int x = px + (int) data->offset_x;
+         int y = py + (int) data->offset_y;
+      #endif
       data++;
-      /*
-      int x = px + data[t].offset_x;
-      int y = py + data[t].offset_y;
-      */
-      byte ch  = piece_chars[piece];  //piece_chars[p->piece];
-      byte col = piece_colors[piece]; //piece_colors[p->piece];
+
+      byte ch  = piece_chars[piece];
+      byte col = piece_colors[piece];
       draw_tile((byte)x,(byte)y,ch,col);
    }
 }
