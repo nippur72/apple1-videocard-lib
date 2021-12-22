@@ -10,6 +10,9 @@
 // previous implementations for the Laser 310 and Laser 500
 //
 
+// KickC bug waiting to be fixed
+#define BUG736 1
+
 // standard libraries
 #include <string.h>        // memset, memcopy  (memcopy no longer necessary)
 #include <stdlib.h>        // for sprintf, rand
@@ -320,7 +323,6 @@ void initGame() {
    gr_erasepiece(&player);
    generate_new_piece();
 }
-
 
 void main() {
 
