@@ -4,7 +4,7 @@
     "start_address": "0x4000",
     "cpu": "MOS6502X",
     "interrupt": "hardware_all",
-    "emulator": "x64sc",
+    "emulator": "echo",
     "defines": {
         "__APPLE1__": 1,
         "APPLE1": 1,

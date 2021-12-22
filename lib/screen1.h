@@ -1,3 +1,6 @@
+#ifndef SCREEN1_H
+#define SCREEN1_H
+
 byte SCREEN1_TABLE[8] = { 0x00, 0xc0, 0x0e, 0x80, 0x00, 0x76, 0x03, 0x25 };
 
 const word SCREEN1_SIZE = (32*24);
@@ -179,3 +182,5 @@ void screen1_strinput(byte *buffer, byte max_length) {
       }
    }
 }
+
+#endif

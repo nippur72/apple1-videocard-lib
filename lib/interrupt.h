@@ -1,3 +1,6 @@
+#ifndef INTERRUPT_H
+#define INTERRUPT_H
+
 // reserve locations 0,1,2 used by the APPLE1 IRQ jump vector
 // these will contain a three byte instruction "JUMP <interrupt_handler>"
 // in order to make the interrupt routine not reside in zero page
@@ -50,3 +53,4 @@ void wait_interrupt() {
    // while(_irq_trigger == 0);  // waits until it's set to 1 from the interrupt handler
 }
 
+#endif

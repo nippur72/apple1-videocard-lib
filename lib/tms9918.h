@@ -1,3 +1,5 @@
+#ifndef TMS9918_H
+#define TMS9918_H
 // TODO a bitmapped text writing routine (double size ecc)
 // TODO console like text output in screen 2
 // TODO more fonts (C64 and PET/VIC20)
@@ -168,3 +170,4 @@ inline void tms_wait_end_of_frame() {
 #include "screen1.h"
 #include "screen2.h"
 #include "interrupt.h"
+#endif

@@ -1,3 +1,5 @@
+#ifndef FONT8X8_H
+#define FONT8X8_H
 // font from LASER-500 (ASCII characters only)
 
 #pragma data_seg(Code)
@@ -860,3 +862,4 @@ byte FONT[768] = {
 };
 
 #pragma data_seg(Data)
+#endif
