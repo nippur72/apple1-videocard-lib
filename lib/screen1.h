@@ -9,11 +9,8 @@ const word SCREEN1_SIZE = (32*24);
 void screen1_load_font() {
    byte *source = FONT;
 
-   // start writing into VRAM from space character (32..127)
-   tms_set_vram_write_addr(TMS_PATTERN_TABLE+(32*8));
-   for(word i=768;i!=0;i--) {
-      TMS_WRITE_DATA_PORT(*source++);
-   }
+   // copy normal FONT 32..127
+   tms_copy_to_vram(source, 768, TMS_PATTERN_TABLE+(32*8));
 
    // reverse font (32..127)
    source = FONT;
