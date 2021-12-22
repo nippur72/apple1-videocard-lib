@@ -5,7 +5,7 @@
     "start_address": "0x120d",
     "cpu": "MOS6502X",
     "interrupt": "rom_min_vic20",
-    "emulator": "xvic",
+    "emulator": "echo",
     "defines": {
         "__VIC20__": 1,
         "VIC20": 1,

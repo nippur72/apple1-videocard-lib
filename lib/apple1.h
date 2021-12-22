@@ -1,3 +1,6 @@
+#ifndef APPLE1_H
+#define APPLE1_H
+
 #ifdef APPLE1
    // APPLE1   
    const word WOZMON    = 0xFF1F;      // enters monitor
@@ -118,4 +121,6 @@ inline void apple1_eprom_init() {
    // copy the initializaton data from ROM to lowram where "Data" segment is allocated
    memcpy(LOWRAM_START, DATAINCODE, LOWRAM_SIZE);
 }
+#endif
+
 #endif

@@ -1,3 +1,6 @@
+#ifndef UTILS_H
+#define UTILS_H
+
 #define POKE(a,b) (*((byte *)(a))=(byte)(b))
 #define PEEK(a)   (*((byte *)(a)))
 
@@ -11,4 +14,6 @@
 // this makes syntax highlight work in common C editors
 typedef unsigned char byte;
 typedef unsigned int  word;
+#endif
+
 #endif

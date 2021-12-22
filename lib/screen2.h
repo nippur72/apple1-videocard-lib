@@ -1,3 +1,9 @@
+#ifndef SCREEN2_H
+#define SCREEN2_H
+
+#include <fastmultiply.h>
+byte tms_global_mulf_initialized = 0;
+
 byte SCREEN2_TABLE[8] = { 0x02, 0xc0, 0x0e, 0xff, 0x03, 0x76, 0x03, 0x25 };
 
 const word SCREEN2_SIZE = (32*24);
@@ -71,7 +77,7 @@ void screen2_plot(byte x, byte y) {
 }
 
 
-signed int vti_abs(signed int x) {
+signed int math_abs(signed int x) {
     return x < 0 ? -x : x;
 }
 
@@ -83,8 +89,8 @@ void screen2_line(byte _x0, byte _y0, byte _x1, byte _y1) {
    signed int y0 = (signed int) _y0;
    signed int y1 = (signed int) _y1;
 
-   signed int dx =  vti_abs(x1-x0);
-   signed int dy = -vti_abs(y1-y0);
+   signed int dx =  math_abs(x1-x0);
+   signed int dy = -math_abs(y1-y0);
    signed int err = dx+dy; /* error value e_xy */
 
    bool ix = x0<x1;
@@ -100,34 +106,43 @@ void screen2_line(byte _x0, byte _y0, byte _x1, byte _y1) {
    }
 }
 
-/*
+
 // http://members.chello.at/~easyfilter/bresenham.html
-void vti_ellipse_rect(byte _x0, byte _y0, byte _x1, byte _y1)
+/* TODO: FIX THIS, IT DOES NOT DRAW AN ELLIPSE
+void screen2_ellipse_rect(byte _x0, byte _y0, byte _x1, byte _y1)
 {
+   if (tms_global_mulf_initialized == 0) {
+      mulf_init();
+      tms_global_mulf_initialized = 1;
+   }
+   
     //unsigned int x0,y0,x1,y1;
     signed int x0 = (signed int) _x0;
     signed int y0 = (signed int) _y0;
     signed int x1 = (signed int) _x1;
     signed int y1 = (signed int) _y1;
 
-    signed int a = vti_abs(x1-x0), b = vti_abs(y1-y0);
+    signed int a = math_abs(x1-x0), b = math_abs(y1-y0);
     signed int b1 = b&1; // values of diameter
-    signed int dx = 4*(1-a)*b*b, dy = 4*(b1+1)*a*a; // error increment
-    signed int err = dx+dy+b1*a*a, e2; // error of 1.step
+    long dx = mulf16s(1-a, (signed int) mulf16s(b,b))*4;
+    long dy = mulf16s(b1+1,(signed int) mulf16s(a,a))*4; // error increment
+    long err = dx+dy+(signed int) mulf16s((signed int) b1, (signed int) mulf16s(a,a));
+    long e2; // error of 1.step
 
     if (x0 > x1) { x0 = x1; x1 += a; } // if called with swapped points
     if (y0 > y1) y0 = y1; // .. exchange them
-    y0 += (b+1)/2; y1 = y0-b1;   // starting pixel
-    a *= 8*a; b1 = 8*b*b;
+    y0 += (b+1)/2;
+    y1 = y0 - b1;   // starting pixel
+    a = ((signed int) mulf16s(a,a))*8; b1 = ((signed int) mulf16s(b,b))*8;
 
     do {
-        screen2_plot((byte) x1, (byte) y0); //   I. Quadrant
-        screen2_plot((byte) x0, (byte) y0); //  II. Quadrant
-        screen2_plot((byte) x0, (byte) y1); // III. Quadrant
-        screen2_plot((byte) x1, (byte) y1); //  IV. Quadrant
-        e2 = 2*err;
-        if (e2 <= dy) { y0++; y1--; err += dy += a; }  // y step
-        if (e2 >= dx || 2*err > dy) { x0++; x1--; err += dx += b1; } // x step
+      screen2_plot((byte) x1, (byte) y0); //   I. Quadrant
+      screen2_plot((byte) x0, (byte) y0); //  II. Quadrant
+      screen2_plot((byte) x0, (byte) y1); // III. Quadrant
+      screen2_plot((byte) x1, (byte) y1); //  IV. Quadrant
+      e2 = err*2;
+      if ((signed int) e2 <= (signed int) dy) { y0++; y1--; err += dy += a; }  // y step
+      if ((signed int) e2 >= (signed int) dx || (signed int) e2 > (signed int) dy) { x0++; x1--; err += dx += b1; } // x step
     } while (x0 <= x1);
 
     while (y0-y1 < b) {  // too early stop of flat ellipses a=1
@@ -136,6 +151,29 @@ void vti_ellipse_rect(byte _x0, byte _y0, byte _x1, byte _y1)
         screen2_plot((byte) x0-1, (byte) (y1));
         screen2_plot((byte) x1+1, (byte) (y1--));
     }
+    
 }
 */
 
+
+// http://members.chello.at/~easyfilter/bresenham.html
+void screen2_circle(byte _xm, byte _ym, byte _r) {
+
+   signed int xm = (signed int) _xm;
+   signed int ym = (signed int) _ym;
+   signed int r = (signed int) _r;
+
+   int x = -r, y = 0, err = 2-2*r; /* II. Quadrant */ 
+   do {
+      screen2_plot((byte) (xm-x), (byte) (ym+y)); /*   I. Quadrant */
+      screen2_plot((byte) (xm-y), (byte) (ym-x)); /*  II. Quadrant */
+      screen2_plot((byte) (xm+x), (byte) (ym-y)); /* III. Quadrant */
+      screen2_plot((byte) (xm+y), (byte) (ym+x)); /*  IV. Quadrant */
+      r = err;
+      if (r <= y) err += ++y*2+1;           /* e_xy+e_y < 0 */
+      if (r > x || err > y) err += ++x*2+1; /* e_xy+e_x > 0 or no 2nd y-step */
+   } while (x < 0);
+}
+
+
+#endif

@@ -1,3 +1,5 @@
+#ifndef SPRITES_H
+#define SPRITES_H
 // clears all the sprites
 void tms_clear_sprites() {
    // fills first sprite pattern with 0
@@ -15,3 +17,4 @@ void tms_clear_sprites() {
       TMS_WRITE_DATA_PORT(i);       NOP; NOP; NOP; NOP; // color
    }
 }
+#endif
