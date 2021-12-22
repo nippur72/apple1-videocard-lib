@@ -155,6 +155,27 @@ tms_write_reg(7, 0x1F);
 byte oldvalue = tms_regs_latch[7];
 ```
 
+### Working with sprites
+
+```c
+// set 8x8 or 16x16 sprites
+tms_set_sprite_double_size(0);
+
+// set single pixel or double pixel sprites
+tms_set_sprite_magnification(1);
+
+// define the sprite pattern 0
+tms_copy_to_vram(ghost, 8, TMS_SPRITE_PATTERNS);
+
+// define a sprite using the "sprite" struct
+tms_sprite spr;
+spr.x = 100;
+spr.y = 50;
+spr.name = 0;  // pattern 0
+spr.color = COLOR_BLACK;
+tms_set_sprite(0, &spr);
+```
+
 #### Working directly with the I/O chip interface
 
 If you want to program the VDP directly you can use the following utility functions:
