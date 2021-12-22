@@ -162,8 +162,8 @@ void screen2_ellipse_rect(byte _x0, byte _y0, byte _x1, byte _y1)
     }
     
 }
-   }
 */
+   }
 
 // http://members.chello.at/~easyfilter/bresenham.html
 void screen2_circle(byte _xm, byte _ym, byte _r) {
