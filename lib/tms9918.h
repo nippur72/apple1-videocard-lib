@@ -164,6 +164,15 @@ inline void tms_wait_end_of_frame() {
    while(!FRAME_BIT(TMS_READ_CTRL_PORT));
 }
 
+// loads the font on the pattern table
+void tms_copy_to_vram(byte *source, word size, word dest) {
+   // start writing into VRAM from space character (32..127)
+   tms_set_vram_write_addr(dest);
+   for(word i=size;i!=0;i--) {
+      TMS_WRITE_DATA_PORT(*source++);
+   }
+}
+
 #include "apple1.h"
 #include "font8x8.h"
 #include "sprites.h"
