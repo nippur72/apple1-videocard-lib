@@ -1,5 +1,21 @@
 #include <font8x8.h>
 
+#include "cbm_balloon.h"
+
+void move_balloon(byte x, byte y, byte color) {
+   tms_sprite spr0,spr1;
+   spr0.x = x;
+   spr0.y = y;
+   spr0.name = 0;
+   spr0.color = color;
+   spr1.x = spr0.x;
+   spr1.y = spr0.y + 32;
+   spr1.name = spr0.name + 4;
+   spr1.color = spr0.color;
+   tms_set_sprite(0, &spr0);
+   tms_set_sprite(1, &spr1);   
+}
+
 void demo_screen2() {
    tms_init_regs(SCREEN2_TABLE);
 
@@ -30,6 +46,7 @@ void demo_screen2() {
 
    screen2_plot_mode = PLOT_MODE_SET;
 
+/*
    // define sprites using bitmap fonts
    tms_copy_to_vram(&FONT[64*8], 32*8, TMS_SPRITE_PATTERNS);
 
@@ -40,11 +57,43 @@ void demo_screen2() {
    tms_set_sprite_magnification(1);
 
    tms_sprite spr;
-   for(byte t=0;t<32;t++) {
-      spr.x = 10 + t*32;
+   for(byte t=0;t<4;t++) {
+      spr.x = 200;
       spr.y =  5 + t*32;
-      spr.name = t;
+      spr.name = t*4;
       spr.color = t+1;
       tms_set_sprite(t, &spr);
    }
+*/
+
+   // ballon demo
+
+   // define sprites using bitmap fonts
+   tms_copy_to_vram(cbm_balloon, 4*8*2, TMS_SPRITE_PATTERNS);
+   tms_set_sprite_double_size(1);   // set 16x16 sprites   
+   tms_set_sprite_magnification(1); // set double pixel sprites
+
+   int x = 200;
+   int y = 80;
+   int dx = 1;
+   int dy = 1;
+   int delay = 0;   
+   byte sprcolor = COLOR_DARK_BLUE;
+
+   for(;;) {
+      for(delay=0; delay<800; delay++) {
+         delay = delay+1;
+         delay = delay-1;
+      }
+
+      if(apple1_readkey()==0x0d) break;
+      
+      if(x>=228 || x<=0) { dx = -dx; sprcolor++; }
+      if(y>=148 || y<=0) { dy = -dy; sprcolor++; }
+
+      x += dx;
+      y += dy;
+      move_balloon((byte)x,(byte)y, sprcolor);     
+   }
 }
+
