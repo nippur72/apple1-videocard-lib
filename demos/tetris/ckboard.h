@@ -40,11 +40,13 @@ void ck_init() {
 void ck_drawpiece(sprite *pl) {
    tile_offset *data = get_piece_offsets(pl->piece, pl->angle);
    for(byte t=0; t<4; t++) {
-      // int x = pl->x;  byte x1 = data->offset_x; x+= (int) x1;
-      // int y = pl->y;  byte y1 = data->offset_y; y+= (int) y1;
-      
-      int x = pl->x + (int) data->offset_x;
-      int y = pl->y + (int) data->offset_y;
+      #ifdef KICKC_NIGHTLY
+         int x = pl->x + (int) data->offset_x;
+         int y = pl->y + (int) data->offset_y;
+      #else
+         int x = pl->x;  byte x1 = data->offset_x; x+= (int) x1;
+         int y = pl->y;  byte y1 = data->offset_y; y+= (int) y1;
+      #endif
       
       WRITE_BOARD(y,x,pl->piece);
       data++;
@@ -55,12 +57,12 @@ void ck_drawpiece(sprite *pl) {
 void ck_erasepiece(sprite *pl) {
    tile_offset *data = get_piece_offsets(pl->piece, pl->angle);   
    for(byte t=0; t<4; t++) {
-      #ifdef BUG736
-         int x = pl->x;  byte x1 = data->offset_x; x+= (int) x1;
-         int y = pl->y;  byte y1 = data->offset_y; y+= (int) y1;
-      #else
+      #ifdef KICKC_NIGHTLY
          int x = pl->x + (int) data->offset_x;
          int y = pl->y + (int) data->offset_y;
+      #else
+         int x = pl->x;  byte x1 = data->offset_x; x+= (int) x1;
+         int y = pl->y;  byte y1 = data->offset_y; y+= (int) y1;
       #endif
       
       WRITE_BOARD(y,x,EMPTY);
@@ -72,12 +74,12 @@ void ck_erasepiece(sprite *pl) {
 void ck_markpiece(sprite *pl) {
    tile_offset *data = get_piece_offsets(pl->piece, pl->angle);   
    for(byte t=0; t<4; t++) {
-      #ifdef BUG736
-         int x = pl->x;  byte x1 = data->offset_x; x+= (int) x1;
-         int y = pl->y;  byte y1 = data->offset_y; y+= (int) y1;
-      #else
+      #ifdef KICKC_NIGHTLY
          int x = pl->x + (int) data->offset_x;
          int y = pl->y + (int) data->offset_y;
+      #else
+         int x = pl->x;  byte x1 = data->offset_x; x+= (int) x1;
+         int y = pl->y;  byte y1 = data->offset_y; y+= (int) y1;
       #endif
 
       WRITE_BOARD(y,x,MARKED);
@@ -89,12 +91,12 @@ void ck_markpiece(sprite *pl) {
 int collides(sprite *pl) {
    tile_offset *data = get_piece_offsets(pl->piece, pl->angle);
    for(byte t=0; t<4; t++) {
-      #ifdef BUG736
-         int x = pl->x;  byte x1 = data->offset_x; x+= (int) x1;
-         int y = pl->y;  byte y1 = data->offset_y; y+= (int) y1;
-      #else
+      #ifdef KICKC_NIGHTLY
          int x = pl->x + (int) data->offset_x;
          int y = pl->y + (int) data->offset_y;
+      #else
+         int x = pl->x;  byte x1 = data->offset_x; x+= (int) x1;
+         int y = pl->y;  byte y1 = data->offset_y; y+= (int) y1;
       #endif
       if(x<0) return 1;                  // does it collide with left border?
       if(x>=BCOLS) return 1;             // does it collide with right border?
