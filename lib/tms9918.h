@@ -174,7 +174,8 @@ void tms_copy_to_vram(byte *source, word size, word dest) {
 }
 
 #include "apple1.h"
-#include "font8x8.h"
+//#include "font8x8.h"
+#include "c64font.h"
 #include "sprites.h"
 #include "screen1.h"
 #include "screen2.h"
