@@ -11,18 +11,18 @@ inline void acknowledge_interrupt() {
    asm { lda VDP_REG };
 }
 
-export __address(0) byte IRQ_JUMP_OPCODE;    // location 0 contains the opcode for "JMP"
-export __address(1) word IRQ_JUMP_ADDRESS;   // location 1 and 2 contain the jump address
+EXPORT __address(0) byte IRQ_JUMP_OPCODE;    // location 0 contains the opcode for "JMP"
+EXPORT __address(1) word IRQ_JUMP_ADDRESS;   // location 1 and 2 contain the jump address
 
 // storage for a simple watch timer
-export volatile byte _ticks;
-export volatile byte _seconds;
-export volatile byte _minutes;
-export volatile byte _hours;
-export volatile byte _irq_trigger;
+EXPORT volatile byte _ticks;
+EXPORT volatile byte _seconds;
+EXPORT volatile byte _minutes;
+EXPORT volatile byte _hours;
+EXPORT volatile byte _irq_trigger;
 
 // interrupt routine called every 1/60th by the CPU after TMS9918 sets the /INT pin
-export __interrupt(hardware_all) void interrupt_handler() {
+EXPORT __interrupt(hardware_all) void interrupt_handler() {
    // update the watch
    if(++_ticks == 60) {
       _ticks = 0;

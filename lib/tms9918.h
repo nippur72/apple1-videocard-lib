@@ -17,11 +17,11 @@
 #include "utils.h"
 
 #ifdef APPLE1
-   const byte *VDP_DATA = 0xCC00;       // TMS9918 data port (VRAM)
-   const byte *VDP_REG  = 0xCC01;       // TMS9918 register port (write) or status (read)
+   const byte *VDP_DATA = (byte *) 0xCC00;       // TMS9918 data port (VRAM)
+   const byte *VDP_REG  = (byte *) 0xCC01;       // TMS9918 register port (write) or status (read)
 #else
-   const byte *VDP_DATA = 0xA000;       // TMS9918 data port (VRAM)
-   const byte *VDP_REG  = 0xA001;       // TMS9918 register port (write) or status (read)
+   const byte *VDP_DATA = (byte *) 0xA000;       // TMS9918 data port (VRAM)
+   const byte *VDP_REG  = (byte *) 0xA001;       // TMS9918 register port (write) or status (read)
 #endif
 
 // control port bits

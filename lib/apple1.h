@@ -119,7 +119,7 @@ byte apple1_readkey() {
 
 inline void apple1_eprom_init() {
    // copy the initializaton data from ROM to lowram where "Data" segment is allocated
-   memcpy(LOWRAM_START, DATAINCODE, LOWRAM_SIZE);
+   memcpy((byte *)LOWRAM_START, (byte *)DATAINCODE, LOWRAM_SIZE);
 }
 #endif
 
