@@ -48,11 +48,11 @@ void screen1_scroll_up() {
 }
 
 void screen1_prepare() {
+   // clear all the sprites
+   tms_set_total_sprites(0);
+
    // fill name table with spaces (32)
    screen1_cls();
-
-   // clear all the sprites
-   tms_clear_sprites();
 
    // fill pattern table with 0
    tms_set_vram_write_addr(TMS_PATTERN_TABLE);

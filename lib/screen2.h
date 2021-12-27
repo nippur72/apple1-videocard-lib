@@ -10,8 +10,8 @@ const word SCREEN2_SIZE = (32*24);
 
 // prepare the screen 2 to be used as a bitmap
 void screen2_init_bitmap(byte color) {
-   // erases all the sprites
-   tms_clear_sprites();
+   // clear all the sprites
+   tms_set_total_sprites(0);
 
    // fill pattern table with 0 (clear screen)
    tms_set_vram_write_addr(TMS_PATTERN_TABLE);
