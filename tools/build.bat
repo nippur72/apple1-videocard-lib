@@ -11,7 +11,7 @@ copy out\%TARGET%.prg out\%TARGET%_vic20.prg
 call kickc -includedir %TMS9918%\lib -targetdir %TMS9918%\kickc\ -t apple1_jukebox %TARGET%.c -o out\%TARGET%_apple1.prg -e
 call node %TMS9918%\tools\mkeprom out out\%TARGET%_apple1.bin
 
-@echo ======================== APPLE 1 JUKEBOX =================================================
+@echo ======================== APPLE 1 =================================================
 call kickc -includedir %TMS9918%\lib -targetdir %TMS9918%\kickc\ -t apple1 %TARGET%.c -o out\%TARGET%_apple1.prg -e
 copy out\%TARGET%.prg out\%TARGET%_apple1.prg
 
