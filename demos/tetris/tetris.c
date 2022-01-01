@@ -326,7 +326,7 @@ void main() {
    // install the start-of-frame interrupt detection
    //install_interrupt();
 
-#ifdef APPLE1
+#ifdef APPLE1_JUKEBOX
    apple1_eprom_init();
 #endif
 

@@ -2,13 +2,22 @@
 #define SPRITES_H
 
 typedef struct {
-   byte y;
+   signed char y;
    byte x;
    byte name;
    byte color;
 } tms_sprite;
 
 #define SIZEOF_SPRITE 4
+#define SPRITE_OFF_MARKER 0xD0
+#define EARLY_CLOCK 128
+
+void tms_set_total_sprites(byte num) {
+   // write the value 0xD0 as Y coordinate of the first unused sprite
+   word addr = TMS_SPRITE_ATTRS + (word) (num * SIZEOF_SPRITE);
+   tms_set_vram_write_addr(addr);
+   TMS_WRITE_DATA_PORT(SPRITE_OFF_MARKER);  // 0xD0 oi the sprite off indicator
+}
 
 void tms_set_sprite(byte sprite_num, tms_sprite *s) {
    word addr = TMS_SPRITE_ATTRS + (word) (sprite_num * SIZEOF_SPRITE);
@@ -34,21 +43,8 @@ void tms_set_sprite_magnification(byte m) {
    tms_write_reg(1, regval);
 }
 
-// clears all the sprites
-void tms_clear_sprites() {
-   // fills first sprite pattern with 0
-   tms_set_vram_write_addr(TMS_SPRITE_PATTERNS);  
-   for(byte i=0;i<8;i++) {
-      TMS_WRITE_DATA_PORT(0);
-   }
-
-   // set sprite coordinates to (0,0) and set pattern name 0
-   tms_set_vram_write_addr(TMS_SPRITE_ATTRS);       
-   for(byte i=0;i<32;i++) {
-      TMS_WRITE_DATA_PORT(0); NOP; NOP; NOP; NOP; // y coordinate
-      TMS_WRITE_DATA_PORT(0); NOP; NOP; NOP; NOP; // x coordinate
-      TMS_WRITE_DATA_PORT(0); NOP; NOP; NOP; NOP; // name
-      TMS_WRITE_DATA_PORT(0); NOP; NOP; NOP; NOP; // color
-   }
+// clear the collision flag by reading the status register
+inline void tms_clear_collisions() {
+   asm { lda VDP_REG };
 }
 #endif

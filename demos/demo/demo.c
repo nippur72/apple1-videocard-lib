@@ -2,6 +2,7 @@
 
 #include "demo_screen1.h"
 #include "demo_screen2.h"
+#include "demo_balloon.h"
 #include "demo_amiga_hand.h"
 #include "demo_interrupt.h"
 #include "demo_extvid.h"
@@ -14,6 +15,7 @@ void help() {
       "=============\r"
       "1 SCREEN1\r"
       "2 SCREEN2\r"
+      "3 BALLOON\r"
       "A AMIGA HAND\r"
       "I INTERRUPT\r"
       "E FLIP EXT VIDEO\r"
@@ -26,7 +28,7 @@ void help() {
 
 void main() {
 
-#ifdef APPLE1
+#ifdef APPLE1_JUKEBOX
    apple1_eprom_init();
 #endif
 
@@ -34,6 +36,7 @@ void main() {
    for(;;) {
            if(key == '1')  demo_screen1();
       else if(key == '2')  demo_screen2();
+      else if(key == '3')  demo_balloon();
       else if(key == 'A')  demo_amiga_hand();
       else if(key == 'I')  demo_interrupt();
       else if(key == 'E')  flip_external_input();

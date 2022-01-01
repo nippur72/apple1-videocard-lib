@@ -28,23 +28,6 @@ void demo_screen2() {
    screen2_line(18+5+5, 45,232+5+5,187);
    screen2_line(18+5+5,187,232+5+5, 45);
 
-   screen2_plot_mode = PLOT_MODE_SET;
-
-   // define sprites using bitmap fonts
-   tms_copy_to_vram(&FONT[64*8], 32*8, TMS_SPRITE_PATTERNS);
-
-   // set 16x16 sprites
-   tms_set_sprite_double_size(1);
-
-   // set double pixel sprites
-   tms_set_sprite_magnification(1);
-
-   tms_sprite spr;
-   for(byte t=0;t<32;t++) {
-      spr.x = 10 + t*32;
-      spr.y =  5 + t*32;
-      spr.name = t;
-      spr.color = t+1;
-      tms_set_sprite(t, &spr);
-   }
+   screen2_plot_mode = PLOT_MODE_SET;   
 }
+
