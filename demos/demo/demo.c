@@ -28,7 +28,7 @@ void help() {
 
 void main() {
 
-#ifdef APPLE1
+#ifdef APPLE1_JUKEBOX
    apple1_eprom_init();
 #endif
 
