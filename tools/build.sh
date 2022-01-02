@@ -17,7 +17,6 @@ echo ======================== APPLE 1 ==========================================
 kickc.sh -includedir ${TMS9918}/lib -targetdir ${TMS9918}/kickc/ -t apple1 ${TARGET}.c -o out/${TARGET}_apple1.prg -e
 cp out/${TARGET}.prg out/${TARGET}_apple1.prg
 
-
 # clean up files
 rm -f out/apple1_codeseg.bin
 rm -f out/apple1_dataseg.bin
