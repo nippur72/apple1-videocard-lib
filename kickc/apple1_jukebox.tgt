@@ -2,7 +2,7 @@
     "extension": "prg",
     "link": "apple1_jukebox.ld",
     "start_address": "0x4000",
-    "cpu": "MOS6502X",
+    "cpu": "ROM6502",
     "interrupt": "hardware_all",
     "emulator": "echo",
     "defines": {
