@@ -1,6 +1,17 @@
 #ifndef APPLE1_H
 #define APPLE1_H
 
+#ifdef APPLE1_USE_WOZ_MONITOR
+   #pragma zp_reserve(0x24) // XAML  Last "opened" location Low
+   #pragma zp_reserve(0x25) // XAMH  Last "opened" location High
+   #pragma zp_reserve(0x26) // STL   Store address Low
+   #pragma zp_reserve(0x27) // STH   Store address High
+   #pragma zp_reserve(0x28) // L     Hex value parsing Low
+   #pragma zp_reserve(0x29) // H     Hex value parsing High
+   #pragma zp_reserve(0x2A) // YSAV  Used to see if hex value is given
+   #pragma zp_reserve(0x2B) // MODE  $00=XAM, $7F=STOR, $AE=BLOCK XAM
+#endif
+
 #ifdef APPLE1
    // APPLE1   
    const word WOZMON    = 0xFF1F;      // enters monitor
@@ -10,6 +21,8 @@
    const word KEY_CTRL  = 0xd011;      // control port
    const word TERM_DATA = 0xd012;      // write ascii
    const word TERM_CTRL = 0xd013;      // control port
+   const word INBUFFER  = 0x0200;      // woz monitor input buffer
+   const word INBUFSIZE = 0x80;        // woz monitor input buffer size
 #else
    // VIC20
    const word ECHO      = 0xFFD2;       // chrout routine in kernal rom
