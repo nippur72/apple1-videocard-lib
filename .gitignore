@@ -10,3 +10,5 @@ bug/*
 cc65/*
 .vscode/*
 !demos/montyr/*.asm
+*.sym
+
