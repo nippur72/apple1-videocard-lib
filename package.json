@@ -1,0 +1,28 @@
+{
+  "name": "apple1-videocard-lib",
+  "version": "1.0.0",
+  "description": "Library and demos for the \"Apple-1 Graphic Card\" by P-LAB, \r featuring the TMS9918 Video Display Processor by Texas Instruments.",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs",
+    "lib": "lib"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nippur72/apple1-videocard-lib.git"
+  },
+  "author": "Antonino Porcino <nino.porcino@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nippur72/apple1-videocard-lib/issues"
+  },
+  "homepage": "https://github.com/nippur72/apple1-videocard-lib#readme",
+  "dependencies": {
+    "command-line-args": "^5.2.0",
+    "wav-decoder": "^1.3.0",
+    "wav-encoder": "^1.3.0"
+  }
+}
