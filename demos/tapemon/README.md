@@ -9,7 +9,7 @@ the ACI audio cassette interface.
 
 - Connect your playback device (PC, Smartphone, iPod etc) to the ACI
 
-- Play the file `frames.wav` contained in `frame/frames.wav.zip` archive. The file
+- Play the file `packets.wav` contained in `packets_wav/packets.zip` archive. The file
 will send a continous stream of small data packets that are catched by the program
 running on the Apple-1. Each packet is 64 bytes long.
 

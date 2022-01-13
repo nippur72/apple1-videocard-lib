@@ -1,20 +1,21 @@
 #include <utils.h>
 #include <apple1.h>
 
-const byte *HEX1L      = 0x24;             // End address of dump block
-const byte *HEX1H      = 0x25;             //
-const byte *HEX2L      = 0x26;             // Begin address of dump block
-const byte *HEX2H      = 0x27;             //
-const byte *LASTSTATE  = 0x29;             // Last input state
-const byte *NUMPULSES  = 0x30;             // Number of long pulses to sync at the header
-const byte *TAPEIN     = 0xC081;           // Tape input
+byte *const HEX1L      = 0x24;             // End address of dump block
+byte *const HEX1H      = 0x25;             //
+byte *const HEX2L      = 0x26;             // Begin address of dump block
+byte *const HEX2H      = 0x27;             //
+byte *const LASTSTATE  = 0x29;             // Last input state
+byte *const NUMPULSES  = 0x30;             // Number of long pulses to sync at the header
+byte *const TAPEIN     = 0xC081;           // Tape input
+byte *const DSP        = 0xD012;           // display data port
 
-#define FRAMELEN 64
+#define PACKETSIZE 64
 
 const byte *RX_BUFFER = 0x200;
-const byte *RX_BUFFER_END = (0x200+FRAMELEN-1);
+const byte *RX_BUFFER_END = (0x200+PACKETSIZE-1);
 
-void read_frame()
+void read_packet()
 {
    asm {
                 // set READ buffer pointers to $0200-$021F (32 characters)
@@ -85,40 +86,59 @@ restidx:        rts
    }
 }
 
-byte data_block[FRAMELEN];
+byte reference_packet[PACKETSIZE];
 byte *vmeter = "0123456789ABCDEF";
 
-void main() {
+void decode_packets() {
 
-   // fill the data block with the known values
-   for(byte t=0;t<FRAMELEN;t++) data_block[t] = t;
-
-   woz_puts("\r\rTAPE MONITOR\r\r");
+   // fill the reference packet with the known values
+   for(byte t=0;t<PACKETSIZE;t++) reference_packet[t] = t;
 
    // tape monitor loop
    for(;;) {
-      read_frame();  // attempt reading 1 data block
+      read_packet();  // attempt reading 1 packet
 
-      // compare received data block with known data
+      // compare received packet with reference
       byte i;
-      for(i=0;i<FRAMELEN;i++) {
-         if(RX_BUFFER[i] != data_block[i]) break;
+      for(i=0;i<PACKETSIZE;i++) {
+         if(RX_BUFFER[i] != reference_packet[i]) break;
       }
 
       // display result
-           if(i==0)        woz_putc('.');
-      else if(i==FRAMELEN) woz_putc('*');
-      else {
-         #if FRAMELEN == 32
-         woz_putc(vmeter[i>>1]);
-         #endif
-         #if FRAMELEN == 64
-         woz_putc(vmeter[i>>2]);
-         #endif
-      }
+           if(i==0)          woz_putc('.');
+      else if(i==PACKETSIZE) woz_putc('*');
+      else                   woz_putc(vmeter[i>>2]);               
 
       // exit with "X"
       if(apple1_readkey()=='X') break;
    }
 }
 
+void simple_toggle_monitor()
+{
+   asm {
+simple_monitor:   lda TAPEIN               // read tape input
+                  cmp LASTSTATE            // compare to previous state
+                  beq no_toggle            // if same just skip
+                  sta LASTSTATE            // else save new state
+                  ldx #35                  // set "toggle detected" flag in X, 35 is also the char to print
+no_toggle:        bit DSP                  // check if display is ready to accept a character
+                  bmi simple_monitor       // if not, just keep reading tape           
+                  stx DSP                  // else display the "toggle detected" flag character
+                  ldx #45                  // resets the "toggle detected" flag to the "-" sign, sets also Z=0 flag                  
+                  bne simple_monitor       // cheap jump because Z is also 0
+   }
+}
+
+void main() {
+   woz_puts("\r\rTAPE MONITOR\r\r"
+      "[1] DECODE PACKETS\r"
+      "[2] SIMPLE TOGGLE MONITOR\r\r"
+   );
+
+   while(1) {
+      byte key = apple1_getkey();
+      if(key == '1') decode_packets();
+      if(key == '2') simple_toggle_monitor();
+   }
+}
