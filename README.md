@@ -10,10 +10,13 @@ demos/
    demo/     demo program that makes use of the library
    picshow/  demo program that shows a picture in bitmap mode
    tetris/   a game
+   montyr/   "Monty on the Run" SID tune by R. Hubbard
+   tapemon/  tape monitor utility
 docs/        TMS9918 and Apple-1 manuals
 kickc/       target configuration files for KickC
 lib/         the library files to include in your project
-tools/       some build tools
+tools/       
+   wavconv/  prg <-> WAV file converter   
 ```
 
 ## Introduction
