@@ -13,3 +13,4 @@ cc65/*
 *.sym
 !demos/tapemon/out/tapemon.0280.bin
 !demos/tapemon/out/tapemon_apple1.prg
+node_modules/
