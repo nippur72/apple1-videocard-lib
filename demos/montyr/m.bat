@@ -9,10 +9,12 @@
 %JAVAEXE% -jar %KICKASSJAR% montyr_apple1.asm -define SID_CC00
 %PRG2BIN% -i montyr_apple1.prg -o montyr.sid_cc00.0280R.bin 
 %PRG2WOZ% -i montyr_apple1.prg -o montyr.sid_cc00.0280R.woz
+copy montyr_apple1.prg montyr.sid_cc00.0280R.prg
 
 %JAVAEXE% -jar %KICKASSJAR% montyr_apple1.asm -define SID_C800
 %PRG2BIN% -i montyr_apple1.prg -o montyr.sid_c800.0280R.bin
-%PRG2WOZ% -i montyr_apple1.prg -o montyr.sid_c800.0280R.woz 
+%PRG2WOZ% -i montyr_apple1.prg -o montyr.sid_c800.0280R.woz
+copy montyr_apple1.prg montyr.sid_c800.0280R.prg
 
 
 
