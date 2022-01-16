@@ -12,8 +12,6 @@
 // TODO wait_end_of_frame() 
 // TODO screen1() and screen2() helpers
 
-#pragma encoding(ascii)    // encode strings in plain ascii
-
 #include "utils.h"
 
 #ifdef APPLE1

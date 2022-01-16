@@ -1,6 +1,8 @@
 #ifndef APPLE1_H
 #define APPLE1_H
 
+#pragma encoding(ascii)    // encode strings in plain ascii
+
 #ifdef APPLE1_USE_WOZ_MONITOR
    #pragma zp_reserve(0x24) // XAML  Last "opened" location Low
    #pragma zp_reserve(0x25) // XAMH  Last "opened" location High

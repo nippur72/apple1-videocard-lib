@@ -13,6 +13,10 @@ cc65/*
 *.sym
 !demos/tapemon/out/tapemon.0280.bin
 !demos/tapemon/out/tapemon_apple1.prg
+!demos/montyr/montyr.sid_cc00.0280R.bin
+!demos/montyr/montyr.sid_cc00.0280R.woz
+!demos/montyr/montyr.sid_c800.0280R.bin
+!demos/montyr/montyr.sid_c800.0280R.woz
 node_modules/
 packets*.wav
 package-lock.json

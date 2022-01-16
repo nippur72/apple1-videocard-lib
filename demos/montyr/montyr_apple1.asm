@@ -10,8 +10,14 @@
 //    jsr    music+6 to stop the music and quieten SID
 //
 
-
+#if SID_CC00
 .var sid = $cc00    // $d400 on the C64
+#endif
+
+#if SID_C800
+.var sid = $c800    // $d400 on the C64
+#endif
+
 .var dsp = $d012    // apple1 display device port
 
 //rob hubbard
