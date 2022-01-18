@@ -1,34 +1,57 @@
 #include <utils.h>
 #include <apple1.h>
 
-byte *const HEX1L      = 0x24;             // End address of dump block
-byte *const HEX1H      = 0x25;             //
-byte *const HEX2L      = 0x26;             // Begin address of dump block
-byte *const HEX2H      = 0x27;             //
-byte *const LASTSTATE  = 0x29;             // Last input state
-byte *const NUMPULSES  = 0x30;             // Number of long pulses to sync at the header
-byte *const TAPEIN     = 0xC081;           // Tape input
-byte *const DSP        = 0xD012;           // display data port
+__address(0x24)   word ENDADDR;    // End address of dump block
+__address(0x26)   word STARTADDR;  // Begin address of dump block
+__address(0x29)   byte LASTSTATE;  // Last input state
+__address(0x30)   byte NUMPULSES;  // Number of long pulses to sync at the header
+__address(0xC081) byte TAPEIN;     // Tape input
+__address(0xD012) byte DSP;        // display data port
 
-#define PACKETSIZE 64
+/*
+#pragma zp_reserve(0x24)
+#pragma zp_reserve(0x25)
+#pragma zp_reserve(0x26)
+#pragma zp_reserve(0x27)
+#pragma zp_reserve(0x29)
+#pragma zp_reserve(0x30)
 
-const byte *RX_BUFFER = 0x200;
-const byte *RX_BUFFER_END = (0x200+PACKETSIZE-1);
+__export byte *const ENDADDR    = (byte *) 0x24;             // End address of dump block
+__export byte *const STARTADDR  = (byte *) 0x26;             // Begin address of dump block
+__export byte *const LASTSTATE  = (byte *) 0x29;             // Last input state
+__export byte *const NUMPULSES  = (byte *) 0x30;             // Number of long pulses to sync at the header
+__export byte *const TAPEIN     = (byte *) 0xC081;           // Tape input
+__export byte *const DSP        = (byte *) 0xD012;           // display data port
+*/
+
+byte PACKETSIZE;
+
+byte reference_packet[256];
+byte *vmeter = "0123456789ABCDEF";
+
+//byte *const RX_BUFFER = (byte *) 0x060c; //0x4200;
+const byte RX_BUFFER[256];   // TODO ??????????????????????????????????????????
 
 void read_packet()
 {
+   word RX_BUFFER_END = (word) RX_BUFFER + (word) PACKETSIZE - 1;
+
+   ENDADDR    = (word) RX_BUFFER_END;
+   STARTADDR  = (word) RX_BUFFER;
+
+   /*
+   *((word *)ENDADDR)   = (word) RX_BUFFER_END;
+   *((word *)STARTADDR) = (word) RX_BUFFER;
+   */
+
+   /*
+   woz_putc('\r');
+   woz_print_hex(*(STARTADDR+1)); woz_print_hex(*(STARTADDR));
+   woz_putc('.');
+   woz_print_hex(*(ENDADDR+1)); woz_print_hex(*(ENDADDR));
+   */
+
    asm {
-                // set READ buffer pointers to $0200-$021F (32 characters)
-                lda     #<RX_BUFFER_END
-                sta     HEX1L
-                lda     #>RX_BUFFER_END
-                lda     HEX1H
-
-                lda     #<RX_BUFFER
-                sta     HEX2L
-                lda     #>RX_BUFFER
-                lda     HEX2H
-
                 // synchronizes with the short header
 
 syncstart:      lda     #24           // 24 cycles (3 bytes of $ff)
@@ -56,7 +79,7 @@ rdbit:          pha
                 ldy     #57           //  set threshold value in middle
                 dex                   //  decrement bit counter
                 bne     rdbit         //  read next bit!
-                sta     ($26,x)       //  save new byte   *** same as "STA (HEX2L,X)" see KickC bug #756 https://gitlab.com/camelot/kickc/-/issues/756
+                sta     (STARTADDR,x) //  save new byte
                 jsr     incaddr       //  increment address
                 ldy     #53           //  compensate threshold with workload
                 bcc     rdbyte        //  do next byte if not done yet!
@@ -70,14 +93,14 @@ cmplevel:       dey                   //  decrement time counter
                 cpy     #128          //  compare threshold
                 rts
                 // [...]
-incaddr:        lda     HEX2L         //  compare current address with
-                cmp     HEX1L         //   end address
-                lda     HEX2H
-                sbc     HEX1H
-                inc     HEX2L         //  and increment current address
-                bne     nocarry       //  no carry to msb!
-                inc     HEX2H
-nocarry:        rts
+incaddr:        lda     <STARTADDR    //  compare current address with
+                cmp     <ENDADDR      //    end address
+                lda     >STARTADDR
+                sbc     >ENDADDR      //  carry set if STARTADDR = ENDADDR
+                inc     <STARTADDR    //  increment current address
+                bne     no_inc_hi     //
+                inc     >STARTADDR
+no_inc_hi:      rts
 
                 // end of read routine "restidx" is the exit point
 
@@ -86,10 +109,9 @@ restidx:        rts
    }
 }
 
-byte reference_packet[PACKETSIZE];
-byte *vmeter = "0123456789ABCDEF";
-
 void decode_packets() {
+
+   woz_puts("\rPACKET DECODER MONITOR\r");
 
    // fill the reference packet with the known values
    for(byte t=0;t<PACKETSIZE;t++) reference_packet[t] = t;
@@ -107,7 +129,21 @@ void decode_packets() {
       // display result
            if(i==0)          woz_putc('.');
       else if(i==PACKETSIZE) woz_putc('*');
-      else                   woz_putc(vmeter[i>>2]);               
+      else {
+         if(PACKETSIZE ==  32) woz_putc(vmeter[i>>1]);
+         if(PACKETSIZE ==  64) woz_putc(vmeter[i>>2]);
+         if(PACKETSIZE == 128) woz_putc(vmeter[i>>3]);
+         if(PACKETSIZE == 255) woz_putc(vmeter[i>>4]);
+      }
+
+      /*
+      if(apple1_readkey()=='D') {
+         woz_puts("\r\r");
+         for(i=0;i<PACKETSIZE;i++) {
+            woz_print_hex(RX_BUFFER[i]); woz_putc(' ');
+         }
+      }
+      */
 
       // exit with "X"
       if(apple1_readkey()=='X') break;
@@ -116,6 +152,8 @@ void decode_packets() {
 
 void simple_toggle_monitor()
 {
+   woz_puts("\rTAPE BIT TOGGLE MONITOR\r");
+
    asm {
 simple_monitor:   lda TAPEIN               // read tape input
                   cmp LASTSTATE            // compare to previous state
@@ -130,15 +168,88 @@ no_toggle:        bit DSP                  // check if display is ready to accep
    }
 }
 
+// store the lengths for each phase
+byte phase0[256];
+byte phase1[256];
+
+void count_256_phase_lengths() {
+   asm {
+                ldx     #0            //  count pulses
+
+countpulse:     ldy     #00           //  phase length
+lphase0:        iny                   //  decrement phase length
+                lda     TAPEIN        //  get tape in data
+                cmp     LASTSTATE     //  same as before?
+                beq     lphase0       //  yes, keep counting
+                sta     LASTSTATE     //  save new state
+                tya     
+                sta     phase0,x      //  save phase0 length
+
+                ldy     #00           //  phase length
+lphase1:        iny                   //  decrement phase length
+                lda     TAPEIN        //  get tape in data
+                cmp     LASTSTATE     //  same as before?
+                beq     lphase1       //  yes, keep counting
+                sta     LASTSTATE     //  save new state
+                tya     
+                sta     phase1,x      //  save phase0 length
+
+                inx
+                bne     countpulse    //  if not 256, repeat
+
+   }
+}
+
+void duty_cycle_monitor() {
+   woz_puts("\rDUTY CYCLE MONITOR\r");
+   while(1) {      
+      count_256_phase_lengths();
+
+      // don't consider the first phase, because it's measured during transition
+      phase0[0] = phase0[1];
+      phase1[0] = phase1[1];
+
+      word sum_0 = 0;
+      word sum_1 = 0;
+      byte i=0;
+      do {
+         sum_0 += phase0[i];
+         sum_1 += phase1[i];
+         i++;
+      } while(i!=255);
+
+      // make average
+      sum_0 = sum_0 / 256;
+      sum_1 = sum_1 / 256;
+
+      // display result in 5 columns
+      woz_print_hex((byte)sum_0);
+      woz_putc('-');
+      woz_print_hex((byte)sum_1);
+      woz_puts("   ");
+
+      byte k = apple1_readkey();
+      if(k=='X') break;
+   }
+}
+
 void main() {
-   woz_puts("\r\rTAPE MONITOR\r\r"
-      "[1] DECODE PACKETS\r"
-      "[2] SIMPLE TOGGLE MONITOR\r\r"
-   );
 
    while(1) {
+      woz_puts("\r\rTAPE MONITOR\r\r"
+         "1,2,3,4 => 32,64,128,255 BYTES PACKETS\r"
+         "T SIMPLE TOGGLE MONITOR\r"
+         "D DUTY CYLE MONITOR\r\r"
+         "X EXIT\r\r"
+      );
+
       byte key = apple1_getkey();
-      if(key == '1') decode_packets();
-      if(key == '2') simple_toggle_monitor();
+      if(key == '1') { PACKETSIZE =  32; decode_packets(); }
+      if(key == '2') { PACKETSIZE =  64; decode_packets(); }
+      if(key == '3') { PACKETSIZE = 128; decode_packets(); }
+      if(key == '4') { PACKETSIZE = 255; decode_packets(); }
+      if(key == 'T') simple_toggle_monitor();
+      if(key == 'D') duty_cycle_monitor();
+      if(key == 'X') woz_mon();
    }
 }
