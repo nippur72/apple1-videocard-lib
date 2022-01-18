@@ -8,12 +8,13 @@ call kickc -includedir %TMS9918%\lib -targetdir %TMS9918%\kickc\ -t vic20_8k %TA
 copy out\%TARGET%.prg out\%TARGET%_vic20.prg
 
 @echo ======================== APPLE 1 JUKEBOX =================================================
-call kickc -includedir %TMS9918%\lib -targetdir %TMS9918%\kickc\ -t apple1_jukebox %TARGET%.c -o out\%TARGET%_apple1.prg -e
-call node %TMS9918%\tools\mkeprom out out\%TARGET%_apple1.bin
+call kickc -includedir %TMS9918%\lib -targetdir %TMS9918%\kickc\ -t apple1_jukebox %TARGET%.c -o out\%TARGET%.prg -e
+call node %TMS9918%\tools\mkeprom out out\%TARGET%_jukebox.bin
 
 @echo ======================== APPLE 1 =================================================
-call kickc -includedir %TMS9918%\lib -targetdir %TMS9918%\kickc\ -t apple1 %TARGET%.c -o out\%TARGET%_apple1.prg -e
-copy out\%TARGET%.prg out\%TARGET%_apple1.prg
+call kickc -includedir %TMS9918%\lib -targetdir %TMS9918%\kickc\ -t apple1 %TARGET%.c -o out\%TARGET%.prg -e
+call node %TMS9918%\tools\prg2bin -i out\%TARGET%.prg -o out\%TARGET%.bin
+call node %TMS9918%\tools\prg2woz -i out\%TARGET%.prg -o out\%TARGET%.woz
 
 @rem clean up files
 @del out\apple1_codeseg.bin
@@ -22,4 +23,3 @@ copy out\%TARGET%.prg out\%TARGET%_apple1.prg
 @del out\*.klog
 @del out\*.vs
 @del out\*.dbg
-@del out\%TARGET%.prg
