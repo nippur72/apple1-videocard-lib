@@ -123,6 +123,39 @@ byte apple1_readkey() {
    #endif
 }
 
+void apple1_input_line(byte *buffer, byte max) {
+   byte x=0;
+
+   while(1) {
+      byte c = apple1_getkey();
+      buffer[x] = c;
+      if(c==13) {
+         // RETURN ends input
+         break;
+      }
+      else if(c==27) {
+         // ESC clears the string
+         x=0;
+         break;
+      }
+      else if(c==8 || c=='_') {
+         // BACKSPACE
+         if(x != 0) {
+            woz_putc('_');
+            x--;
+         }
+      }
+      else {
+         // character input
+         if(x<max) {
+            woz_putc(c);
+            x++;
+         }
+      }
+   }
+   buffer[x]=0;
+}
+
 #ifdef APPLE1
 
 #include <stdlib.h> // for memcpy
