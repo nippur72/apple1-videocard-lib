@@ -46,6 +46,12 @@ void woz_print_hex(byte c) {
    #endif
 }
 
+// print hex word
+void woz_print_hexword(word w) {
+   woz_print_hex(*((byte *)&w+1));
+   woz_print_hex(*((byte *)&w));
+}
+
 // puts a character on the apple1 screen using the WOZMON routine
 void woz_putc(byte c) {
    asm {
