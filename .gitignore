@@ -26,4 +26,7 @@ packets*.wav
 !demos/tetris/release/*.bin
 !demos/tetris/release/*.prg
 !demos/tetris/release/*.woz
+!demos/picshow/release/*.bin
+!demos/picshow/release/*.prg
+!demos/picshow/release/*.woz
 
