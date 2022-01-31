@@ -9,6 +9,7 @@
 bug/*
 cc65/*
 .vscode/*
+demos/tests/*
 !demos/montyr/*.asm
 *.sym
 !demos/tapemon/out/tapemon.0280.bin
@@ -19,3 +20,10 @@ cc65/*
 !demos/montyr/montyr.sid_c800.0280R.woz
 node_modules/
 packets*.wav
+!demos/demo/release/*.bin
+!demos/demo/release/*.prg
+!demos/demo/release/*.woz
+!demos/tetris/release/*.bin
+!demos/tetris/release/*.prg
+!demos/tetris/release/*.woz
+
