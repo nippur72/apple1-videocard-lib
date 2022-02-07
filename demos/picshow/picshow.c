@@ -14,7 +14,7 @@ void main() {
    apple1_eprom_init();
 #endif
 
-   woz_puts("DISPLAYING PICTURE...\r\r");
+   woz_puts("\rDISPLAYING PICTURE...\r");
 
    // in screen 2
    tms_init_regs(SCREEN2_TABLE);
