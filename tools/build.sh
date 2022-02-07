@@ -5,10 +5,6 @@ TMS9918=../..
 
 mkdir -p out
 
-echo ======================== VIC20 ===================================================
-kickc.sh -includedir ${TMS9918}/lib -targetdir ${TMS9918}/kickc/ -t vic20_8k ${TARGET}.c -o out/${TARGET}_vic20.prg -e
-cp out/${TARGET}.prg out/${TARGET}_vic20.prg
-
 echo ======================== APPLE 1 JUKEBOX =================================================
 kickc.sh -includedir ${TMS9918}/lib -targetdir ${TMS9918}/kickc/ -t apple1_jukebox ${TARGET}.c -o out/${TARGET}.prg -e
 node ${TMS9918}/tools/mkeprom out out/${TARGET}_jukebox.bin

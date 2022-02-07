@@ -247,7 +247,6 @@ of the KickC compiler:
 
 - `apple1`
 - `apple1_jukebox`
-- `vic20`
 
 #### Target "apple1"
 
@@ -287,10 +286,3 @@ $0000-$00FF zero page: holds some C program variables
 $0280-$0FFF RAM: C program "Data" segment 
 $4000-$7581 ROM: C program "Code" segment 
 $7582-$7FFF ROM: C program "Data" segment (startup values)
-
-#### Target "vic20"
-
-This target has been used during the development of the library
-where a custom made VIC-20 emulator was interfaced with 
-an emulated TMS9918, thus allowing running tests when 
-the real Apple-1 machine was not available.

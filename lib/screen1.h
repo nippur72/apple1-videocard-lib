@@ -67,11 +67,7 @@ void screen1_prepare() {
    }
 }
 
-#ifdef VIC20
-#define CHR_BACKSPACE   20
-#else
 #define CHR_BACKSPACE   8
-#endif
 
 #define CHR_HOME        11
 #define CHR_CLS         12
