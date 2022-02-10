@@ -1,16 +1,18 @@
+// TODO warm flag form boot message
+// TODO comando HELP
 // TODO comando CD
 // TODO comando MKDIR
 // TODO comando RMDIR
 // TODO comando DEL
 // TODO comando REN
 // TODO comando COPY
-// TODO comando JMP
-// TODO comando RUN a vuoto
+// TODO comando RUN a vuoto?
 // TODO questione del puntino che va in timeout
 
 #define APPLE1_USE_WOZ_MONITOR 1
 
 #pragma start_address(0x8000)
+//#pragma start_address(0x0280)
 
 #pragma zp_reserve(0x4a) 
 #pragma zp_reserve(0x4b)
@@ -44,9 +46,17 @@ byte *const DDRA  = (byte *) 0xA003;  // port B data direction register
 #define CPU_STROBE(v) (*PORTB = (v))  /* CPU strobe is bit 0 OUTPUT */
 #define MCU_STROBE    (*PORTB & 128)  /* MCU strobe is bit 7 INPUT  */
 
-__address(3) byte TIMEOUT;
-__address(4) word TIMEOUT_MAX = 0x1388;
-__address(6) word TIMEOUT_CNT;
+// global variables that are shared among the functions
+__address( 3) byte TIMEOUT;
+__address( 4) word TIMEOUT_MAX = 0x1388;
+__address( 6) word TIMEOUT_CNT;
+__address( 8) word tmpword;
+__address(10) word start_address;
+__address(12) word end_address;
+__address(14) word len;
+__address(16) byte hex_to_word_ok;
+__address(17) byte cmd;
+__address(18) byte *token_ptr;
 
 void wait_mcu_strobe(byte v) {   
    if(TIMEOUT) return;
@@ -104,20 +114,24 @@ void print_string_response() {
       if(TIMEOUT) break;
       if(data == 0) break;  // string terminator
       else woz_putc(data);
+      if(apple1_readkey()) {
+         woz_puts("*BRK*\r");
+         break;
+      }      
    }
 }
 
-word receive_word_from_mcu() {
-   word data;
-   *((byte *)&data)     = receive_byte_from_MCU();
-   *((byte *)(&data+1)) = receive_byte_from_MCU();
-   return data;
+void receive_word_from_mcu() {   
+   *((byte *)&tmpword)     = receive_byte_from_MCU();
+   *((byte *)(&tmpword+1)) = receive_byte_from_MCU();   
 }
 
-void send_word_to_mcu(word data) {
-   send_byte_to_MCU( *((byte *)&data)     );
-   send_byte_to_MCU( *((byte *)(&data+1)) );
+void send_word_to_mcu() {
+   send_byte_to_MCU( *((byte *)&tmpword)     );
+   send_byte_to_MCU( *((byte *)(&tmpword+1)) );
 }
+
+// #define LOADING_DOTS 0
 
 #include "console.h"
 

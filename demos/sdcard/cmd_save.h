@@ -1,4 +1,6 @@
-void comando_save(char *filename) {
+// global len
+
+void comando_save() {
 
    // send command byte
    send_byte_to_MCU(CMD_WRITE);
@@ -18,8 +20,21 @@ void comando_save(char *filename) {
    }
 
    // send file size   
-   word len = ((word) *BASIC_HIMEM) - ((word)*BASIC_LOMEM) + 512;
-   send_word_to_mcu(len);
+   //tmpword = ((word) *BASIC_HIMEM) - ((word)*BASIC_LOMEM) + 512;
+   // in assembly:
+   asm {
+      sec
+      lda BASIC_HIMEM
+      sbc BASIC_LOMEM
+      sta tmpword
+      lda BASIC_HIMEM+1
+      sbc BASIC_LOMEM+1
+      sta tmpword+1            
+      inc tmpword+1
+      inc tmpword+1
+   }
+
+   send_word_to_mcu();
    if(TIMEOUT) return;
 
    // send actual bytes
@@ -30,16 +45,20 @@ void comando_save(char *filename) {
    if(TIMEOUT) return;
    
    // lowmem + stack chuck
-   for(byte *ptr=(byte *)2; ptr<=(byte *)0x1ff; ptr++) {
-      send_byte_to_MCU(*ptr);
+   for(token_ptr=(byte *)2; token_ptr<=(byte *)0x1ff; token_ptr++) {
+      send_byte_to_MCU(*token_ptr);
       if(TIMEOUT) return;
    }
 
    // basic data
-   for(word ptr=*BASIC_LOMEM; ptr<*BASIC_HIMEM; ptr++) {
-      send_byte_to_MCU(*((byte *)ptr));
+   tmpword = (word) *BASIC_HIMEM;
+   for(token_ptr=*BASIC_LOMEM; token_ptr<(byte *)tmpword; token_ptr++) {
+      send_byte_to_MCU(*token_ptr);
       if(TIMEOUT) return;
-      if(((byte)ptr) == 0) woz_putc('.');
+
+      #ifdef LOADING_DOTS
+      if(((byte)token_ptr) == 0) woz_putc('.');
+      #endif
    }
 
    // get second response
@@ -51,12 +70,5 @@ void comando_save(char *filename) {
       return;
    }
 
-   // print feedback to user
-   woz_putc('\r');
-   woz_puts(filename);
-   woz_puts(": LOMEM=");
-   woz_print_hexword(*BASIC_LOMEM);
-   woz_puts(" HIMEM=");
-   woz_print_hexword(*BASIC_HIMEM);
-   woz_puts("\rOK");
+   bas_file_info();
 }

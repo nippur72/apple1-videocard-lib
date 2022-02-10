@@ -1,4 +1,8 @@
-void comando_write(char *filename, word start, word end) {
+// gloabl start_address
+// global end_address
+// gloabl len
+
+void comando_write() {
 
    // send command byte
    send_byte_to_MCU(CMD_WRITE);
@@ -18,16 +22,30 @@ void comando_write(char *filename, word start, word end) {
    }
 
    // send file size
-   word len = end-start + 1;
-   send_word_to_mcu(len);
+   //tmpword = (word) end_address - (word) start_address + 1;   // KickC bug: (word) cast is needed
+   asm {
+      sec
+      lda end_address
+      sbc start_address
+      sta tmpword
+      lda end_address+1
+      sbc start_address+1
+      sta tmpword+1
+   }
+   tmpword++;
+
+   send_word_to_mcu();
    if(TIMEOUT) return;
 
    // send actual bytes
-   byte *ptr = (byte *) start;
-   for(word t=0;t<len;t++) {
-      send_byte_to_MCU(*ptr++);
+   token_ptr = (byte *) start_address;
+   for(word t=0;t<tmpword;t++) {
+      send_byte_to_MCU(*token_ptr++);
       if(TIMEOUT) return;
+
+      #ifdef LOADING_DOTS
       if(((byte)t) == 0) woz_putc('.');
+      #endif
    }
 
    // get second response
@@ -43,11 +61,11 @@ void comando_write(char *filename, word start, word end) {
    woz_putc('\r');
    woz_puts(filename);
    woz_puts(": ");
-   woz_print_hexword(start);
+   woz_print_hexword(start_address);
    woz_putc('.');
-   woz_print_hexword(end);
+   woz_print_hexword(end_address);
    woz_puts(" (");
-   utoa(len, filename, 10);   // use filename as string buffer
+   utoa(tmpword, filename, 10);   // use filename as string buffer
    woz_puts(filename);
    woz_puts(" BYTES)\rOK");
 }

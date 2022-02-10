@@ -1,9 +1,9 @@
 #include <stdlib.h>
 #include <stdlib.h>
 
-word *const BASIC_LOMEM = (word *) 0x004a;   // lomem pointer used by integer BASIC
-word *const BASIC_HIMEM = (word *) 0x004c;   // himem pointer used by integer BASIC
-byte *const KEYBUF      = (byte *) 0x0200;   // use the same keyboard buffer as in WOZ monitor
+byte **const BASIC_LOMEM = (byte **) 0x004a;   // lomem pointer used by integer BASIC
+byte **const BASIC_HIMEM = (byte **) 0x004c;   // himem pointer used by integer BASIC
+byte *const KEYBUF        = (byte *) 0x0200;   // use the same keyboard buffer as in WOZ monitor
 
 #define KEYBUFSTART (0x200)
 #define KEYBUFLEN   (40)
@@ -18,16 +18,18 @@ byte *const hex2     = (byte *) (KEYBUFSTART+KEYBUFLEN+6+33+5); // [5]  stores a
 const byte ERR_RESPONSE = 0xFF;
 
 // command constants, which are also byte commands to send to the MCU
-const byte CMD_READ  = 0;
-const byte CMD_WRITE = 1;
-const byte CMD_DIR   = 2;
-const byte CMD_TIME  = 3;
-const byte CMD_LOAD  = 4;
-const byte CMD_RUN   = 5;
-const byte CMD_SAVE  = 6;
-const byte CMD_TYPE  = 7;
-const byte CMD_DUMP  = 8;
-const byte CMD_EXIT  = 9;
+const byte CMD_READ  =  0;
+const byte CMD_WRITE =  1;
+const byte CMD_DIR   =  2;
+const byte CMD_TIME  =  3;
+const byte CMD_LOAD  =  4;
+const byte CMD_RUN   =  5;
+const byte CMD_SAVE  =  6;
+const byte CMD_TYPE  =  7;
+const byte CMD_DUMP  =  8;
+const byte CMD_JMP   =  9;
+const byte CMD_BAS   = 10;
+const byte CMD_EXIT  = 11;
 
 // the list of recognized commands
 byte *DOS_COMMANDS[] = {
@@ -40,6 +42,8 @@ byte *DOS_COMMANDS[] = {
    "SAVE",
    "TYPE",
    "DUMP",
+   "JMP",
+   "BAS",
    "EXIT"
 };
 
@@ -48,13 +52,14 @@ byte *DOS_COMMANDS[] = {
 // returns the number of character to advance the pointer
 // leading and trailing spaces are ignored
 // max is the (maximum) size of dest
-byte get_token(byte *source, byte *dest, byte max) {
+
+void get_token(byte *dest, byte max) {
    byte i = 0;
    byte j = 0;
    byte first_char_found = 0;
 
    while(1) {
-      byte c = source[i];
+      byte c = token_ptr[i];
       if(c == 0) {
          break;
       }
@@ -71,32 +76,38 @@ byte get_token(byte *source, byte *dest, byte max) {
       else break;
    }
    dest[j] = 0;
-   return i+1;
+   token_ptr += i+1;
 }
 
-// returns the command code or 0xff if not recognized
-byte find_command() {   
-   for(byte cmd=0; cmd<sizeof(DOS_COMMANDS); cmd++) {
-      if(strcmp(command, DOS_COMMANDS[cmd]) == 0) return cmd;      
+void find_command() {
+   /*
+   for(cmd=0; cmd<sizeof(DOS_COMMANDS); cmd++) {
+      if(strcmp(command, DOS_COMMANDS[cmd]) == 0) return;
    }
-   return 0xFF;
+   cmd = 0xFF;
+   */
+   for(cmd=0; cmd<sizeof(DOS_COMMANDS); cmd++) {
+      byte *ptr = DOS_COMMANDS[cmd];
+      for(byte j=0;;j++) {
+         if(command[j] != ptr[j]) break;
+         else if(command[j] == 0) return;
+      }      
+   }
+   cmd = 0xFF;
 }
 
-// converts the hexadecimal string argument to 16 bit word
-byte hex_to_word_ok;
-word hex_to_word(byte *str) {
+void hex_to_word(byte *str) {
    hex_to_word_ok = 1;
-   word res=0;
+   tmpword=0;
    byte c;
    byte i;
    for(i=0; c=str[i]; ++i) {
-      res = res << 4;
-           if(c>='0' && c<='9') res += (c-'0');
-      else if(c>='A' && c<='F') res += (c-65)+0x0A;
+      tmpword = tmpword << 4;
+           if(c>='0' && c<='9') tmpword += (c-'0');
+      else if(c>='A' && c<='F') tmpword += (c-65)+0x0A;
       else hex_to_word_ok = 0;
    }
    if(i>4 || i==0) hex_to_word_ok = 0;
-   return res;
 }
 
 #include "cmd_read.h"
@@ -112,10 +123,10 @@ void console() {
    VIA_init();
 
    //          1234567890123456789012345678901234567890
-   woz_puts("\rREAD,WRITE,LOAD,RUN,SAVE,TYPE,DUMP,DIR\r"
-              "TIME,EXIT\r");
+   //woz_puts("\rREAD,WRITE,LOAD,RUN,SAVE,TYPE,DUMP,DIR\r"
+   //           "TIME,JMP,EXIT\r");
 
-   woz_puts("\rSD CARD DOS 1.0\r");
+   woz_puts("\r\r*** SD CARD OS 1.0\r");
 
    // main loop   
    while(1) {
@@ -129,114 +140,133 @@ void console() {
       woz_putc('\r');
 
       // decode command
-      byte *ptr = KEYBUF;
-      ptr += get_token(ptr, command, 5);
-      byte cmd = find_command();
+      token_ptr = KEYBUF;
+      get_token(command, 5);
+
+      find_command();  // put command in cmd
       
       if(cmd == CMD_READ) {
-         ptr += get_token(ptr, filename, 32);  // parse filename
+         get_token(filename, 32);  // parse filename
          if(filename[0] == 0) {
             woz_puts("?MISSING FILENAME");
             continue;
          }
 
-         ptr += get_token(ptr, hex1, 4);       // parse hex start address
-         word start = hex_to_word(hex1);
+         get_token(hex1, 4);       // parse hex start address
+         hex_to_word(hex1);         
+         start_address = tmpword;
+
          if(!hex_to_word_ok) {
             woz_puts("?BAD ADDRESS");
             continue;
          }
-         comando_read(filename, start);
+         comando_read();
       }
       else if(cmd == CMD_WRITE) {
          // parse filename
-         ptr += get_token(ptr, filename, 32);
+         get_token(filename, 32);
          if(filename[0] == 0) {
             woz_puts("?MISSING FILENAME");
             continue;
          }
 
          // parse hex start address
-         ptr += get_token(ptr, hex1, 4);
-         word start = hex_to_word(hex1);
+         get_token(hex1, 4);
+         hex_to_word(hex1);
+         start_address = tmpword;         
+
          if(!hex_to_word_ok) {
             woz_puts("?BAD ADDRESS");
             continue;
          }
 
          // parse hex end address
-         ptr += get_token(ptr, hex2, 4);
-         word end = hex_to_word(hex2);
+         get_token(hex2, 4);
+         hex_to_word(hex2); 
+         end_address = tmpword;
          if(!hex_to_word_ok) {
             woz_puts("?BAD ADDRESS");
             continue;
          }
-
-         comando_write(filename, start, end);
+         comando_write();
       }
       else if(cmd == CMD_DIR)  {
          comando_dir();
       }
       else if(cmd == CMD_TIME) {
-         ptr += get_token(ptr, hex1, 4);  // parse hex timeout value
+         get_token(hex1, 4);  // parse hex timeout value
          if(strlen(hex1)!=0) {
-            TIMEOUT_MAX = hex_to_word(hex1);
+            hex_to_word(hex1);
             if(!hex_to_word_ok) {
                woz_puts("?BAD ARGUMENT");
                continue;
             }
+            TIMEOUT_MAX = tmpword;
          }
          woz_puts("TIMEOUT_MAX: ");
          woz_print_hexword(TIMEOUT_MAX);
       }
       else if(cmd == CMD_LOAD || cmd == CMD_RUN) {
-         ptr += get_token(ptr, filename, 32);  // parse filename
+         get_token(filename, 32);  // parse filename
          if(filename[0] == 0) {
             woz_puts("?MISSING FILENAME");
             continue;
          }
-         comando_load(filename, cmd);
+         comando_load();
       }
       else if(cmd == CMD_SAVE) {
-         ptr += get_token(ptr, filename, 32);  // parse filename
+         get_token(filename, 32);  // parse filename
          if(filename[0] == 0) {
             woz_puts("?MISSING FILENAME");
             continue;
          }
-         comando_save(filename);
+         comando_save();
       }
       else if(cmd == CMD_TYPE) {
-         ptr += get_token(ptr, filename, 32);  // parse filename
+         get_token(filename, 32);  // parse filename
          if(filename[0] == 0) {
             woz_puts("?MISSING FILENAME");
             continue;
          }
-         comando_type(filename);
+         comando_type();
       }
       else if(cmd == CMD_DUMP) {
-         ptr += get_token(ptr, filename, 32);  // parse filename
+         get_token(filename, 32);  // parse filename
          if(filename[0] == 0) {
             woz_puts("?MISSING FILENAME");
             continue;
          }
 
-         // parse hex start address
-         ptr += get_token(ptr, hex1, 4);
-         word start = hex_to_word(hex1);
-         if(!hex_to_word_ok) {
-            woz_puts("?BAD ADDRESS");
-            continue;
-         }
+         start_address = 0;
+         end_address = 0xffff;
 
-         // parse hex end address
-         ptr += get_token(ptr, hex2, 4);
-         word end = hex_to_word(hex2);
+         // parse hex start address
+         get_token(hex1, 4);
+         hex_to_word(hex1);
+         
+         if(hex_to_word_ok) {
+            start_address = tmpword;
+            // parse hex end address
+            get_token(hex2, 4);
+            hex_to_word(hex2);            
+            if(hex_to_word_ok) end_address = tmpword;
+         }         
+         comando_dump();
+      }
+      else if(cmd == CMD_JMP) {
+         get_token(hex1, 4);  // parse hex 
+         hex_to_word(hex1);            
          if(!hex_to_word_ok) {
-            woz_puts("?BAD ADDRESS");
+            woz_puts("?BAD ARGUMENT");
             continue;
          }
-         if(end<start) end = 0xFFFF;
-         comando_dump(filename, start, end);
+         asm {
+            jmp (tmpword)
+         }
+      }
+      else if(cmd == CMD_BAS) {
+         woz_puts("BAS ");
+         bas_info();
       }
       else if(cmd == CMD_EXIT) {
          woz_puts("BYE\r");

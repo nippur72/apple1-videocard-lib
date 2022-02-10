@@ -1,4 +1,4 @@
-void comando_type(char *filename) {
+void comando_type() {
 
    // send command byte
    send_byte_to_MCU(CMD_READ);
@@ -18,12 +18,12 @@ void comando_type(char *filename) {
       return;
    }
 
-   // get file length
-   word len = receive_word_from_mcu();
+   // get file length in tmpword
+   receive_word_from_mcu();
    if(TIMEOUT) return;
 
    // get file bytes   
-   for(word t=0;t!=len;t++) {
+   for(word t=0;t!=tmpword;t++) {
       byte data = receive_byte_from_MCU();
       if(TIMEOUT) return;
       woz_putc(data);

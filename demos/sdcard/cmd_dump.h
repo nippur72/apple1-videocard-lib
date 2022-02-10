@@ -1,4 +1,7 @@
-void comando_dump(char *filename, word start, word end) {
+// global start_address
+// global end_address
+
+void comando_dump() {
 
    // send command byte
    send_byte_to_MCU(CMD_READ);
@@ -18,8 +21,8 @@ void comando_dump(char *filename, word start, word end) {
       return;
    }
 
-   // get file length
-   word len = receive_word_from_mcu();
+   // get file length in tmpword
+   receive_word_from_mcu();
    if(TIMEOUT) return;
 
    // 1234567890123456789012345678901234567890
@@ -27,11 +30,11 @@ void comando_dump(char *filename, word start, word end) {
 
    // get file bytes   
    byte row = 0;
-   for(word t=0;t!=len;t++) {
+   for(word t=0;t!=tmpword;t++) {
       byte data = receive_byte_from_MCU();
       if(TIMEOUT) return;
 
-      if(!(t>=start && t<=end)) continue;
+      if(!(t>=start_address && t<=end_address)) continue;
 
       if(row == 0) {
          woz_putc('\r');
