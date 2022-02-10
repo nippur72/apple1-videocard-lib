@@ -204,6 +204,7 @@ const int ERR_RESPONSE = 255;
 const int OK_RESPONSE  =   0;
 
 char filename[64]; 
+char tmp[64];
 
 // **************************************************************************************
 // **************************************************************************************
@@ -306,8 +307,7 @@ void comando_dir() {
 }
 
 void print_dir_entry(File dir, int what) {
-  while (true) {
-    if(TIMEOUT) break;
+  while (true) {    
     File entry = dir.openNextFile();
 
     if(!entry) {
@@ -317,8 +317,7 @@ void print_dir_entry(File dir, int what) {
 
     // send file size or directory
     entry.getName(filename, 64);
-    char tmp[40];
-
+    
     if((what == 0 && entry.isDirectory()) || (what == 1 && !entry.isDirectory())) {
       if(entry.isDirectory()) {
         sprintf(tmp, "(DIR) %s\r", filename);
@@ -330,7 +329,9 @@ void print_dir_entry(File dir, int what) {
         send_byte_to_cpu(tmp[t]);
         if(TIMEOUT) break;
       }
-      Serial.println(tmp);
+      if(TIMEOUT) break;
+      
+      Serial.println(tmp);               
     }
     entry.close();
   }
