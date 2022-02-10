@@ -1,17 +1,9 @@
-// 1 per SD card normale, 0 per SDFat
 
 #include <Regexp.h>
-
-#define USE_SD_H 0
-
 #include <SPI.h>
-
-#if USE_SD_H
-#include <SD.h>
-#else  
 #include "SdFat.h"
+
 SdFat SD;
-#endif
 
 #define SD_CS_PIN SS
 
@@ -180,16 +172,11 @@ void send_byte_to_cpu(int data) {
 void setup() {
   // debug on serial
   Serial.begin(9600);  
-
-#if USE_SD_H
-  Serial.println(F("SDCARD library: SD.h"));
-#else  // USE_SD_H
   Serial.println(F("SDCARD library: SDFat.h"));
-#endif  // USE_SD_H
 
   // initialize SD card
-  if (!SD.begin(SD_CS_PIN)) Serial.println("SD card initialization failed");    
-  else                      Serial.println("SD card initialized");
+  if (!SD.begin(SD_CS_PIN)) Serial.println(F("SD card initialization failed"));    
+  else                      Serial.println(F("SD card initialized"));
   
   // control pins setup
   pinMode(CPU_STROBE, INPUT);
@@ -224,6 +211,7 @@ char filename[64];
 // **************************************************************************************
 // **************************************************************************************
 
+// recursive print directory
 void printDirectory(File dir, int numTabs) {
   
   while (true) {
@@ -245,12 +233,9 @@ void printDirectory(File dir, int numTabs) {
 
     // nome del file
     char *msg;
-#if USE_SD_H    
-    msg = entry.name();
-#else
     entry.getName(filename, 64);
     msg = filename;
-#endif
+    
     Serial.print(msg);    
     for(int t=0; t<strlen(msg); t++) {
       send_byte_to_cpu(msg[t]);
@@ -282,6 +267,77 @@ void printDirectory(File dir, int numTabs) {
   }
 }
 
+// versione ricorsiva (disabilitata)
+void comando_dir_alternate() {
+  Serial.println(F("command DIR received from CPU"));
+
+  File root = SD.open("/");
+  printDirectory(root, 0);
+  root.close();
+
+  // terminates
+  send_byte_to_cpu(0);
+  Serial.println(F("command DIR ended"));
+}
+
+// versione tipo MS-DOS
+void comando_dir() {
+  Serial.println(F("command DIR received from CPU"));
+
+  File dir;
+
+  // lists directories first
+  dir = SD.open("/");
+  print_dir_entry(dir, 0);
+  dir.close();
+
+  if(TIMEOUT) return;
+  
+  // then files
+  dir = SD.open("/");
+  print_dir_entry(dir, 1);
+  dir.close();
+
+  if(TIMEOUT) return;
+
+  // terminates
+  send_byte_to_cpu(0);
+  Serial.println(F("command DIR ended"));
+}
+
+void print_dir_entry(File dir, int what) {
+  while (true) {
+    if(TIMEOUT) break;
+    File entry = dir.openNextFile();
+
+    if(!entry) {
+      // no more files
+      break;
+    }
+
+    // send file size or directory
+    entry.getName(filename, 64);
+    char tmp[40];
+
+    if((what == 0 && entry.isDirectory()) || (what == 1 && !entry.isDirectory())) {
+      if(entry.isDirectory()) {
+        sprintf(tmp, "(DIR) %s\r", filename);
+      }
+      else {
+        sprintf(tmp, "%5d %s\r", entry.size(), filename);
+      }      
+      for(int t=0;t<strlen(tmp);t++) {
+        send_byte_to_cpu(tmp[t]);
+        if(TIMEOUT) break;
+      }
+      Serial.println(tmp);
+    }
+    entry.close();
+  }
+  dir.close();
+}
+
+
 // **************************************************************************************
 // **************************************************************************************
 // ********************************* CMD_READ  ******************************************
@@ -289,42 +345,42 @@ void printDirectory(File dir, int numTabs) {
 // **************************************************************************************
 
 void comando_read() {
-  Serial.println("command CMD_READ received from CPU");
+  Serial.println(F("command CMD_READ received from CPU"));
 
   // reads filename as 0 terminated string
   receive_string_from_cpu(filename);
   if(TIMEOUT) return;
-  Serial.print("file to read: ");
+  Serial.print(F("file to read: "));
   Serial.println(filename);
 
   if(!SD.exists(filename)) {
-    Serial.println("error opening file");
+    Serial.println(F("error opening file"));
     send_byte_to_cpu(ERR_RESPONSE);
-    send_string_to_cpu("?FILE NOT FOUND");
+    send_string_to_cpu((char *)F("?FILE NOT FOUND"));
     return;    
   }
 
   // open the file 
   File myFile = SD.open(filename);
   if(!myFile) {            
-    Serial.println("error opening file");
+    Serial.println(F("error opening file"));
     send_byte_to_cpu(ERR_RESPONSE);
-    send_string_to_cpu("?CAN'T OPEN FILE");
+    send_string_to_cpu((char *)F("?CAN'T OPEN FILE"));
     return;
   }  
-  Serial.println("file opened on the SD card");
+  Serial.println(F("file opened on the SD card"));
 
   // ok response
   send_byte_to_cpu(OK_RESPONSE);
   if(TIMEOUT) return;
-  Serial.println("ok response sent to CPU");
+  Serial.println(F("ok response sent to CPU"));
     
   // sends size as low and high byte
   int size = myFile.size();
   send_byte_to_cpu(size & 0xFF);
   send_byte_to_cpu((size >> 8) & 0xFF);
   if(TIMEOUT) return;
-  Serial.println("file size sent to CPU");
+  Serial.println(F("file size sent to CPU"));
 
   int bytes_sent = 0;    
   while(myFile.available() && !TIMEOUT) {      
@@ -334,12 +390,12 @@ void comando_read() {
   myFile.close();
 
   if(TIMEOUT) {
-    Serial.print("timeout, bytes sent: "); 
+    Serial.print(F("timeout, bytes sent: ")); 
     Serial.println(bytes_sent); 
     return;
   }
     
-  Serial.println("file read ok");
+  Serial.println(F("file read ok"));
 }
 
 void send_string_to_cpu(char *msg) {
@@ -374,40 +430,40 @@ int receive_word_from_cpu() {
 }
 
 void comando_write() {
-  Serial.println("command CMD_WRITE received from CPU");
+  Serial.println(F("command CMD_WRITE received from CPU"));
 
   // reads filename as 0 terminated string
   receive_string_from_cpu(filename);
   if(TIMEOUT) return;
-  Serial.print("file to write: ");
+  Serial.print(F("file to write: "));
   Serial.println(filename);
   
   if(SD.exists(filename)) {
-    Serial.println("file already exist");
+    Serial.println(F("file already exist"));
     send_byte_to_cpu(ERR_RESPONSE);
-    send_string_to_cpu("?ALREADY EXISTS");
+    send_string_to_cpu((char *)F("?ALREADY EXISTS"));
     return;    
   }
 
   // open the file 
   File myFile = SD.open(filename, FILE_WRITE);
   if(!myFile) {            
-    Serial.println("error opening file for write");
+    Serial.println(F("error opening file for write"));
     send_byte_to_cpu(ERR_RESPONSE);
-    send_string_to_cpu("?CAN'T CREATE FILE");
+    send_string_to_cpu((char *)F("?CAN'T CREATE FILE"));
     return;
   }  
-  Serial.println("file opened for write on the SD card");
+  Serial.println(F("file opened for write on the SD card"));
 
   // ok response
   send_byte_to_cpu(OK_RESPONSE);
   if(TIMEOUT) return;
-  Serial.println("first ok response sent to CPU");
+  Serial.println(F("first ok response sent to CPU"));
     
   // get file size low and high byte
   int size = receive_word_from_cpu();
   if(TIMEOUT) return;
-  Serial.print("received file size: ");
+  Serial.print(F("received file size: "));
   Serial.println(size);
 
   int error = 0;
@@ -425,14 +481,14 @@ void comando_write() {
 
   // report write issues
   if(error) {
-    Serial.println("file write error");    
+    Serial.println(F("file write error"));    
     send_byte_to_cpu(ERR_RESPONSE);
     if(TIMEOUT) return;
     send_string_to_cpu("?WRITE ERROR");
     return;
   }
       
-  Serial.println("file read ok");
+  Serial.println(F("file read ok"));
   send_byte_to_cpu(OK_RESPONSE);
 }
 
@@ -450,29 +506,19 @@ void loop() {
 
   if(data == CMD_READ) {
     comando_read();
-    if(TIMEOUT) Serial.println("TIMEOUT during CMD_READ");    
+    if(TIMEOUT) Serial.println(F("TIMEOUT during CMD_READ"));    
   }
   else if(data == CMD_WRITE) {
     comando_write();
-    if(TIMEOUT) Serial.println("TIMEOUT during CMD_WRITE");
+    if(TIMEOUT) Serial.println(F("TIMEOUT during CMD_WRITE"));
   }
   else if(data == CMD_DIR) {
-    Serial.println("command DIR received from CPU");
-
-    File root = SD.open("/");
-    printDirectory(root, 0);
-    root.close();
-
-    // terminates
-    send_byte_to_cpu(0);
-
-    if(TIMEOUT) Serial.println("TIMEOUT during DIR");    
-
-    Serial.println("command DIR ended");    
+    comando_dir();
+    if(TIMEOUT) Serial.println(F("TIMEOUT during DIR"));    
   }
   else {
-    Serial.print("unknown command ");
+    Serial.print(F("unknown command "));
     Serial.print(data);
-    Serial.println(" received");
+    Serial.println(F(" received"));
   }
 }
