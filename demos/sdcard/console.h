@@ -30,7 +30,8 @@ const byte CMD_DUMP  =  8;
 const byte CMD_JMP   =  9;
 const byte CMD_BAS   = 10;
 const byte CMD_DEL   = 11;
-const byte CMD_EXIT  = 12;
+const byte CMD_LS    = 12;
+const byte CMD_EXIT  = 13;
 
 // the list of recognized commands
 byte *DOS_COMMANDS[] = {
@@ -46,6 +47,7 @@ byte *DOS_COMMANDS[] = {
    "JMP",
    "BAS",
    "DEL",
+   "LS",
    "EXIT"
 };
 
@@ -193,8 +195,8 @@ void console() {
          }
          comando_write();
       }
-      else if(cmd == CMD_DIR)  {
-         comando_dir();
+      else if(cmd == CMD_DIR || cmd == CMD_LS) {
+         comando_dir(cmd);
       }
       else if(cmd == CMD_TIME) {
          get_token(hex1, 4);  // parse hex timeout value
