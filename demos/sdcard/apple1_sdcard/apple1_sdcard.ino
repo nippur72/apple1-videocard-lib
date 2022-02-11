@@ -1,4 +1,3 @@
-
 #include <Regexp.h>
 #include <SPI.h>
 #include "SdFat.h"
@@ -196,9 +195,10 @@ void setup() {
   }
 }
 
-const int CMD_READ  = 0;
-const int CMD_WRITE = 1;
-const int CMD_DIR   = 2;
+const int CMD_READ  =  0;
+const int CMD_WRITE =  1;
+const int CMD_DIR   =  2;
+const int CMD_DEL   = 11;
 
 const int ERR_RESPONSE = 255;
 const int OK_RESPONSE  =   0;
@@ -306,7 +306,7 @@ void comando_dir() {
   Serial.println(F("command DIR ended"));
 }
 
-void print_dir_entry(File dir, int what) {
+void print_dir_entry(File dir, int list_files) {
   while (true) {    
     File entry = dir.openNextFile();
 
@@ -318,20 +318,24 @@ void print_dir_entry(File dir, int what) {
     // send file size or directory
     entry.getName(filename, 64);
     
-    if((what == 0 && entry.isDirectory()) || (what == 1 && !entry.isDirectory())) {
+    if((list_files == 0 && entry.isDirectory()) || (list_files == 1 && !entry.isDirectory())) {
       if(entry.isDirectory()) {
         sprintf(tmp, "(DIR) %s\r", filename);
+        print_string_to_cpu(tmp);
+        Serial.println(tmp);                       
       }
       else {
-        sprintf(tmp, "%5d %s\r", entry.size(), filename);
+        // BUG the following line does not work
+        // sprintf(tmp, "%5d %s", entry.size(), filename);        
+        // use this instead
+        sprintf(tmp, "%5d ", entry.size());
+        print_string_to_cpu(tmp);
+        Serial.print(tmp);       
+        print_string_to_cpu(filename);                
+        send_byte_to_cpu('\r');
+        Serial.println(filename);               
       }      
-      for(int t=0;t<strlen(tmp);t++) {
-        send_byte_to_cpu(tmp[t]);
-        if(TIMEOUT) break;
-      }
-      if(TIMEOUT) break;
-      
-      Serial.println(tmp);               
+      if(TIMEOUT) break;          
     }
     entry.close();
   }
@@ -407,6 +411,17 @@ void send_string_to_cpu(char *msg) {
     if(c==0) break;
   }
 }
+
+// come send_string_to_cpu ma senza lo zero finale
+void print_string_to_cpu(char *msg) {
+  while(1) {
+    int c = *msg++;
+    if(c==0) break;
+    send_byte_to_cpu(c);
+    if(TIMEOUT) break;    
+  }
+}
+
 
 void receive_string_from_cpu(char *msg) {
   while(1) {
@@ -495,6 +510,56 @@ void comando_write() {
 
 // **************************************************************************************
 // **************************************************************************************
+// ********************************* CMD_DEL ********************************************
+// **************************************************************************************
+// **************************************************************************************
+
+void comando_del() {
+  Serial.println(F("command DEL received from CPU"));
+
+  // reads filename as 0 terminated string
+  receive_string_from_cpu(filename);
+  if(TIMEOUT) return;
+  Serial.print(F("file to delete: "));
+  Serial.println(filename);
+  
+  if(!SD.exists(filename)) {
+    Serial.println(F("file does not exist"));
+    send_string_to_cpu((char *)F("?FILE NOT FOUND"));
+    return;    
+  }
+
+  if(TIMEOUT) return;
+
+  // open the file for deletion
+  File myFile = SD.open(filename, FILE_WRITE);
+  if(!myFile) {            
+    Serial.println(F("error opening file for deletion"));    
+    send_string_to_cpu((char *)F("?CAN'T DELETE FILE"));
+    myFile.close();
+    return;
+  }  
+
+  if(TIMEOUT) return;
+    
+  if(!myFile.remove()) {
+    Serial.println(F("error removing file"));
+    send_string_to_cpu((char *)F("?CAN'T DELETE FILE"));      
+    myFile.close();
+    return;
+  }
+
+  // close the file
+  myFile.close();
+
+  print_string_to_cpu(filename);  
+  send_string_to_cpu((char *)F(" DELETED")); 
+
+  Serial.println(F("file deleted"));       
+}
+
+// **************************************************************************************
+// **************************************************************************************
 // ********************************* LOOP  **********************************************
 // **************************************************************************************
 // **************************************************************************************
@@ -516,6 +581,10 @@ void loop() {
   else if(data == CMD_DIR) {
     comando_dir();
     if(TIMEOUT) Serial.println(F("TIMEOUT during DIR"));    
+  }  
+  else if(data == CMD_DEL) {
+    comando_del();
+    if(TIMEOUT) Serial.println(F("TIMEOUT during DEL"));    
   }
   else {
     Serial.print(F("unknown command "));

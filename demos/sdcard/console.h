@@ -29,7 +29,8 @@ const byte CMD_TYPE  =  7;
 const byte CMD_DUMP  =  8;
 const byte CMD_JMP   =  9;
 const byte CMD_BAS   = 10;
-const byte CMD_EXIT  = 11;
+const byte CMD_DEL   = 11;
+const byte CMD_EXIT  = 12;
 
 // the list of recognized commands
 byte *DOS_COMMANDS[] = {
@@ -44,6 +45,7 @@ byte *DOS_COMMANDS[] = {
    "DUMP",
    "JMP",
    "BAS",
+   "DEL",
    "EXIT"
 };
 
@@ -117,6 +119,7 @@ void hex_to_word(byte *str) {
 #include "cmd_type.h"
 #include "cmd_dump.h"
 #include "cmd_dir.h"
+#include "cmd_del.h"
 
 void console() {   
 
@@ -267,6 +270,14 @@ void console() {
       else if(cmd == CMD_BAS) {
          woz_puts("BAS ");
          bas_info();
+      }
+      else if(cmd == CMD_DEL) {
+         get_token(filename, 32);  // parse filename
+         if(filename[0] == 0) {
+            woz_puts("?MISSING FILENAME");
+            continue;
+         }
+         comando_del();
       }
       else if(cmd == CMD_EXIT) {
          woz_puts("BYE\r");
