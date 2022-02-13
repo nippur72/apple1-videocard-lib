@@ -116,6 +116,46 @@ void apple1_input_line(byte *buffer, byte max) {
    buffer[x]=0;
 }
 
+const byte prompt_char = ']';
+
+void apple1_input_line_prompt(byte *buffer, byte max) {
+   byte x=0;
+
+   woz_putc(prompt_char);
+
+   while(1) {
+      byte c = apple1_getkey();
+      buffer[x] = c;
+      if(c==13) {
+         // RETURN ends input
+         break;
+      }
+      else if(c==27) {
+         // ESC clears the string
+         x=0;
+         break;
+      }
+      else if(c==8 || c=='_') {
+         // BACKSPACE
+         if(x != 0) {
+            x--;
+            buffer[x] = 0;
+            woz_putc('\r');
+            woz_putc(prompt_char);
+            woz_puts(buffer);
+         }
+      }
+      else {
+         // character input
+         if(x<max) {
+            woz_putc(c);
+            x++;
+         }
+      }
+   }
+   buffer[x]=0;
+}
+
 #include <stdlib.h> // for memcpy
 
 #define LOWRAM_START 0x280
