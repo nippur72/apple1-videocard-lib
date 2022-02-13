@@ -706,12 +706,7 @@ void comando_mkdir() {
 // **************************************************************************************
 
 void send_cd_path() {
-  if(cd_path[0]==0) {
-    send_string_to_cpu("/");
-  }
-  else {
-    send_string_to_cpu(cd_path);
-  }
+  send_string_to_cpu(cd_path);
 }
 
 void comando_cd() {
@@ -737,7 +732,7 @@ void comando_cd() {
     // changes to the root directory
     if(SD.chdir()) {
       // set root working directory
-      strcpy(cd_path[0], filename);      
+      strcpy(cd_path, filename);      
       send_cd_path();
       Serial.print(F("dir changed to:"));
       Serial.println(cd_path);
