@@ -31,7 +31,14 @@ const byte CMD_JMP   =  9;
 const byte CMD_BAS   = 10;
 const byte CMD_DEL   = 11;
 const byte CMD_LS    = 12;
-const byte CMD_EXIT  = 13;
+const byte CMD_CD    = 13;
+const byte CMD_MKDIR = 14;
+const byte CMD_RMDIR = 15;
+const byte CMD_RM    = 16;
+const byte CMD_MD    = 17;
+const byte CMD_RD    = 18;
+const byte CMD_PWD   = 19;
+const byte CMD_EXIT  = 16;
 
 // the list of recognized commands
 byte *DOS_COMMANDS[] = {
@@ -48,6 +55,13 @@ byte *DOS_COMMANDS[] = {
    "BAS",
    "DEL",
    "LS",
+   "CD",
+   "MKDIR",
+   "RMDIR",
+   "RM",
+   "MD",
+   "RD",
+   "PWD",
    "EXIT"
 };
 
@@ -83,13 +97,9 @@ void get_token(byte *dest, byte max) {
    token_ptr += i+1;
 }
 
+// looks "command" into table "DOS_COMMANDS" and
+// if found sets the index in "cmd", 0xFF if not found
 void find_command() {
-   /*
-   for(cmd=0; cmd<sizeof(DOS_COMMANDS); cmd++) {
-      if(strcmp(command, DOS_COMMANDS[cmd]) == 0) return;
-   }
-   cmd = 0xFF;
-   */
    for(cmd=0; cmd<sizeof(DOS_COMMANDS); cmd++) {
       byte *ptr = DOS_COMMANDS[cmd];
       for(byte j=0;;j++) {
@@ -120,16 +130,15 @@ void hex_to_word(byte *str) {
 #include "cmd_save.h"
 #include "cmd_type.h"
 #include "cmd_dump.h"
-#include "cmd_dir.h"
 #include "cmd_del.h"
+#include "cmd_dir.h"
+#include "cmd_mkdir.h"
+#include "cmd_rmdir.h"
+#include "cmd_chdir.h"
 
 void console() {   
 
    VIA_init();
-
-   //          1234567890123456789012345678901234567890
-   //woz_puts("\rREAD,WRITE,LOAD,RUN,SAVE,TYPE,DUMP,DIR\r"
-   //           "TIME,JMP,EXIT\r");
 
    woz_puts("\r\r*** SD CARD OS 1.0\r");
 
@@ -139,10 +148,9 @@ void console() {
       // clear input buffer
       for(byte i=0; i<KEYBUFLEN; i++) KEYBUF[i] = 0;
 
-      // input from keyboard
-      woz_puts("\r]");
-      apple1_input_line(KEYBUF, KEYBUFLEN);
       woz_putc('\r');
+      apple1_input_line_prompt(KEYBUF, KEYBUFLEN);
+      if(KEYBUF[0]!=0) woz_putc('\r');
 
       // decode command
       token_ptr = KEYBUF;
@@ -196,6 +204,7 @@ void console() {
          comando_write();
       }
       else if(cmd == CMD_DIR || cmd == CMD_LS) {
+         get_token(filename, 32);  // parse filename
          comando_dir(cmd);
       }
       else if(cmd == CMD_TIME) {
@@ -273,13 +282,38 @@ void console() {
          woz_puts("BAS ");
          bas_info();
       }
-      else if(cmd == CMD_DEL) {
+      else if(cmd == CMD_DEL || cmd == CMD_RM) {
          get_token(filename, 32);  // parse filename
          if(filename[0] == 0) {
             woz_puts("?MISSING FILENAME");
             continue;
          }
          comando_del();
+      }
+      else if(cmd == CMD_MKDIR || cmd == CMD_MD) {
+         get_token(filename, 32);  // parse filename
+         if(filename[0] == 0) {
+            woz_puts("?MISSING FILENAME");
+            continue;
+         }
+         comando_mkdir();
+      }
+      else if(cmd == CMD_RMDIR || cmd == CMD_RD) {
+         get_token(filename, 32);  // parse filename
+         if(filename[0] == 0) {
+            woz_puts("?MISSING FILENAME");
+            continue;
+         }
+         comando_rmdir();
+      }
+      else if(cmd == CMD_CD) {
+         get_token(filename, 32);  // parse filename
+         comando_cd();
+      }
+      else if(cmd == CMD_PWD) {
+         // PWD is a CD with no args
+         filename[0] = 0;
+         comando_cd();
       }
       else if(cmd == CMD_EXIT) {
          woz_puts("BYE\r");

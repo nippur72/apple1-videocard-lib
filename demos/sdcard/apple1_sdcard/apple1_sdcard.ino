@@ -168,6 +168,39 @@ void send_byte_to_cpu(int data) {
 // *********************************************************************************************
 // *********************************************************************************************
 
+const int CMD_READ  =  0;
+const int CMD_WRITE =  1;
+const int CMD_DIR   =  2;
+const int CMD_DEL   = 11;
+const int CMD_LS    = 12;
+const int CMD_CD    = 13;
+const int CMD_MKDIR = 14;
+const int CMD_RMDIR = 15;
+
+const int ERR_RESPONSE = 255;
+const int OK_RESPONSE  =   0;
+
+char filename[64]; 
+char tmp[64];
+char cd_path[64]; 
+
+// fixed messages
+const char *FILE_NOT_FOUND = "?FILE NOT FOUND";
+const char *CANT_OPEN_FILE = "?CAN'T OPEN FILE";
+const char *ALREADY_EXISTS = "?FILE ALREADY EXISTS";
+const char *CANT_CREATE_FILE = "?CAN'T CREATE FILE";
+const char *WRITE_ERROR = "?WRITE ERROR";
+const char *CANT_DELETE_FILE = "?CAN'T DELETE FILE";
+const char *FILE_DELETED = " DELETED";
+const char *DIR_NOT_FOUND = "?DIR NOT FOUND";
+const char *CANT_REMOVE_DIR = "?CAN'T REMOVE DIR";
+const char *DIR_REMOVED = " (DIR) REMOVED";
+const char *DIR_ALREADY_EXISTS = "?DIR ALREADY EXISTS";
+const char *CANT_MAKE_DIR = "?CAN'T MAKE DIR";
+const char *DIR_CREATED = " (DIR) CREATED";
+const char *CANT_CD_DIR = "?CAN'T CHANGE DIR";
+const char *NOT_A_DIRECTORY = "?NOT A DIRECTORY";
+
 void setup() {
   // debug on serial
   Serial.begin(9600);  
@@ -187,31 +220,25 @@ void setup() {
   set_data_port_direction(DIR_INPUT);
 
   MatchState ms;
-  char buf [100] = { F("The quick brown fox jumps over the lazy wolf") };
+  char buf [100] = { "The quick " };
   ms.Target (buf);
   char result = ms.Match ("f.x");
   if(result >0) {
     Serial.println("match!");  
   }
+
+  // set working directory to root
+  strcpy(cd_path, "/");
 }
 
-const int CMD_READ  =  0;
-const int CMD_WRITE =  1;
-const int CMD_DIR   =  2;
-const int CMD_DEL   = 11;
-
-const int ERR_RESPONSE = 255;
-const int OK_RESPONSE  =   0;
-
-char filename[64]; 
-char tmp[64];
 
 // **************************************************************************************
 // **************************************************************************************
-// ********************************* DIR  ***********************************************
+// ********************************* @CMD_DIR  ******************************************
 // **************************************************************************************
 // **************************************************************************************
 
+/*
 // recursive print directory
 void printDirectory(File dir, int numTabs) {
   
@@ -252,15 +279,13 @@ void printDirectory(File dir, int numTabs) {
       Serial.print("\t\t");
       send_byte_to_cpu(' ');
       send_byte_to_cpu(' ');
-
-      /*
+     
       // file size
-      Serial.println(entry.size(), DEC);
-      msg = itoa(entry.size());
-      for(int t=0; t<strlen(msg); t++) {
-        send_byte_to_cpu(msg[t]);
-      }
-      */
+      //Serial.println(entry.size(), DEC);
+      //msg = itoa(entry.size());
+      //for(int t=0; t<strlen(msg); t++) {
+      //  send_byte_to_cpu(msg[t]);
+      //}     
       send_byte_to_cpu('\r');
       
     }
@@ -280,23 +305,40 @@ void comando_dir_alternate() {
   send_byte_to_cpu(0);
   Serial.println(F("command DIR ended"));
 }
+*/
 
 // versione tipo MS-DOS
-void comando_dir() {
+void comando_dir(int command) {
   Serial.println(F("command DIR received from CPU"));
 
-  File dir;
+  // reads filename as 0 terminated string
+  receive_string_from_cpu(filename);
+  if(TIMEOUT) return;
+  Serial.print(F("dir to read: "));
+  Serial.println(filename);
 
-  // lists directories first
-  dir = SD.open("/");
-  print_dir_entry(dir, 0);
-  dir.close();
+  File dir;  
+  
+  if(filename[0]==0) {
+    // no argument given, use cd_path
+    strcpy(filename, cd_path);    
+  }
 
+  dir = SD.open(filename);
+
+  if(!dir) {
+    Serial.println(F("dir not found"));    
+    send_string_to_cpu(DIR_NOT_FOUND);
+    return;    
+  }
+
+  // *** lists directories first  
+  print_dir_entry(dir, 0, command);  
   if(TIMEOUT) return;
   
-  // then files
-  dir = SD.open("/");
-  print_dir_entry(dir, 1);
+  // *** then files
+  dir.rewind();
+  print_dir_entry(dir, 1, command);
   dir.close();
 
   if(TIMEOUT) return;
@@ -306,7 +348,7 @@ void comando_dir() {
   Serial.println(F("command DIR ended"));
 }
 
-void print_dir_entry(File dir, int list_files) {
+void print_dir_entry(File dir, int list_files, int command) {
   while (true) {    
     File entry = dir.openNextFile();
 
@@ -320,20 +362,45 @@ void print_dir_entry(File dir, int list_files) {
     
     if((list_files == 0 && entry.isDirectory()) || (list_files == 1 && !entry.isDirectory())) {
       if(entry.isDirectory()) {
-        sprintf(tmp, "(DIR) %s\r", filename);
-        print_string_to_cpu(tmp);
-        Serial.println(tmp);                       
+         if(command != CMD_DIR) {
+           sprintf(tmp, "(DIR) %s\r", filename);
+           print_string_to_cpu(tmp);
+           Serial.println(tmp);     
+         }  
+         else {
+           sprintf(tmp, "%-15s (DIR)\r", filename);
+           print_string_to_cpu(tmp);
+           Serial.println(tmp);     
+         }                
       }
       else {
-        // BUG the following line does not work
-        // sprintf(tmp, "%5d %s", entry.size(), filename);        
-        // use this instead
-        sprintf(tmp, "%5d ", entry.size());
-        print_string_to_cpu(tmp);
-        Serial.print(tmp);       
-        print_string_to_cpu(filename);                
-        send_byte_to_cpu('\r');
-        Serial.println(filename);               
+        if(command != CMD_DIR) {
+           // BUG the following line does not work
+           // sprintf(tmp, "%5d %s", entry.size(), filename);        
+           // use this instead
+           sprintf(tmp, "%5d ", entry.size());
+           print_string_to_cpu(tmp);
+           Serial.print(tmp);       
+
+           print_string_to_cpu(filename);                
+           Serial.println(filename);               
+
+           send_byte_to_cpu('\r');           
+        }
+        else {
+           // BUG the following line does not work
+           // sprintf(tmp, "%5d %s", entry.size(), filename);        
+           // use this instead
+           sprintf(tmp, "%-15s", filename);
+           print_string_to_cpu(tmp);                              
+           Serial.print(filename);               
+
+           sprintf(tmp, "%6d", entry.size());
+           print_string_to_cpu(tmp);
+           Serial.println(tmp);     
+
+           send_byte_to_cpu('\r');
+        }
       }      
       if(TIMEOUT) break;          
     }
@@ -361,7 +428,7 @@ void comando_read() {
   if(!SD.exists(filename)) {
     Serial.println(F("error opening file"));
     send_byte_to_cpu(ERR_RESPONSE);
-    send_string_to_cpu((char *)F("?FILE NOT FOUND"));
+    send_string_to_cpu(FILE_NOT_FOUND);
     return;    
   }
 
@@ -370,7 +437,7 @@ void comando_read() {
   if(!myFile) {            
     Serial.println(F("error opening file"));
     send_byte_to_cpu(ERR_RESPONSE);
-    send_string_to_cpu((char *)F("?CAN'T OPEN FILE"));
+    send_string_to_cpu(CANT_OPEN_FILE);
     return;
   }  
   Serial.println(F("file opened on the SD card"));
@@ -457,7 +524,7 @@ void comando_write() {
   if(SD.exists(filename)) {
     Serial.println(F("file already exist"));
     send_byte_to_cpu(ERR_RESPONSE);
-    send_string_to_cpu((char *)F("?ALREADY EXISTS"));
+    send_string_to_cpu(ALREADY_EXISTS);
     return;    
   }
 
@@ -466,7 +533,7 @@ void comando_write() {
   if(!myFile) {            
     Serial.println(F("error opening file for write"));
     send_byte_to_cpu(ERR_RESPONSE);
-    send_string_to_cpu((char *)F("?CAN'T CREATE FILE"));
+    send_string_to_cpu(CANT_CREATE_FILE);
     return;
   }  
   Serial.println(F("file opened for write on the SD card"));
@@ -500,7 +567,7 @@ void comando_write() {
     Serial.println(F("file write error"));    
     send_byte_to_cpu(ERR_RESPONSE);
     if(TIMEOUT) return;
-    send_string_to_cpu("?WRITE ERROR");
+    send_string_to_cpu(WRITE_ERROR);
     return;
   }
       
@@ -525,7 +592,7 @@ void comando_del() {
   
   if(!SD.exists(filename)) {
     Serial.println(F("file does not exist"));
-    send_string_to_cpu((char *)F("?FILE NOT FOUND"));
+    send_string_to_cpu(FILE_NOT_FOUND);
     return;    
   }
 
@@ -535,7 +602,7 @@ void comando_del() {
   File myFile = SD.open(filename, FILE_WRITE);
   if(!myFile) {            
     Serial.println(F("error opening file for deletion"));    
-    send_string_to_cpu((char *)F("?CAN'T DELETE FILE"));
+    send_string_to_cpu(CANT_DELETE_FILE);
     myFile.close();
     return;
   }  
@@ -544,7 +611,7 @@ void comando_del() {
     
   if(!myFile.remove()) {
     Serial.println(F("error removing file"));
-    send_string_to_cpu((char *)F("?CAN'T DELETE FILE"));      
+    send_string_to_cpu(CANT_DELETE_FILE);      
     myFile.close();
     return;
   }
@@ -553,9 +620,177 @@ void comando_del() {
   myFile.close();
 
   print_string_to_cpu(filename);  
-  send_string_to_cpu((char *)F(" DELETED")); 
+  send_string_to_cpu(FILE_DELETED); 
 
   Serial.println(F("file deleted"));       
+}
+
+// **************************************************************************************
+// **************************************************************************************
+// ********************************* CMD_RMDIR ******************************************
+// **************************************************************************************
+// **************************************************************************************
+
+void comando_rmdir() {
+  Serial.println(F("command RMDIR received from CPU"));
+
+  // reads filename as 0 terminated string
+  receive_string_from_cpu(filename);
+  if(TIMEOUT) return;
+  Serial.print(F("directory to delete: "));
+  Serial.println(filename);
+
+  if(TIMEOUT) return;
+
+  // check if the directory exists
+  if(!SD.exists(filename)) {
+    Serial.println(F("dir does not exist"));
+    send_string_to_cpu(DIR_NOT_FOUND);
+    return;
+  }
+
+  // removes the directory
+  if(!SD.rmdir(filename)) {
+    Serial.println(F("error removing dir"));
+    send_string_to_cpu(CANT_REMOVE_DIR);
+    return;
+  }
+
+  print_string_to_cpu(filename);
+  send_string_to_cpu(DIR_REMOVED);
+
+  Serial.println(F("dir removed"));
+}
+
+// **************************************************************************************
+// **************************************************************************************
+// ********************************* CMD_MKDIR ******************************************
+// **************************************************************************************
+// **************************************************************************************
+
+void comando_mkdir() {
+  Serial.println(F("command MKDIR received from CPU"));
+
+  // reads filename as 0 terminated string
+  receive_string_from_cpu(filename);
+  if(TIMEOUT) return;
+  Serial.print(F("directory to create: "));
+  Serial.println(filename);
+
+  if(TIMEOUT) return;
+
+  // check if the directory exists
+  if(SD.exists(filename)) {
+    Serial.println(F("dir already exist"));
+    send_string_to_cpu(DIR_ALREADY_EXISTS);
+    return;
+  }
+
+  // removes the directory
+  if(!SD.mkdir(filename)) {
+    Serial.println(F("error creating"));
+    send_string_to_cpu(CANT_MAKE_DIR);
+    return;
+  }
+
+  print_string_to_cpu(filename);
+  send_string_to_cpu(DIR_CREATED);
+
+  Serial.println(F("dir created"));
+}
+
+// **************************************************************************************
+// **************************************************************************************
+// ********************************* @CMD_CD ********************************************
+// **************************************************************************************
+// **************************************************************************************
+
+void send_cd_path() {
+  if(cd_path[0]==0) {
+    send_string_to_cpu("/");
+  }
+  else {
+    send_string_to_cpu(cd_path);
+  }
+}
+
+void comando_cd() {
+  Serial.println(F("command CD received from CPU"));
+
+  // reads filename as 0 terminated string
+  receive_string_from_cpu(filename);
+  if(TIMEOUT) return;
+  Serial.print(F("directory to change to: "));
+  Serial.println(filename);
+
+  if(TIMEOUT) return;
+
+  // CD without arguments
+  if(filename[0] == 0) {
+    // does nothing simply prints the path    
+    send_cd_path();
+    return;
+  }
+
+  // CD /
+  if(filename[0] == '/' && filename[1] == 0) {
+    // changes to the root directory
+    if(SD.chdir()) {
+      // set root working directory
+      strcpy(cd_path[0], filename);      
+      send_cd_path();
+      Serial.print(F("dir changed to:"));
+      Serial.println(cd_path);
+      return;      
+    }   
+    else {
+      Serial.println(F("error changing dir"));
+      send_string_to_cpu(CANT_CD_DIR);
+      return;
+    }
+  }
+
+  // CD dirname  
+  if(SD.chdir(filename)) {
+    // update working directory
+    if(filename[0] == '/') {
+      // replace cwd
+      strcpy(cd_path, filename);      
+    }
+    else {
+      // append to cwd
+      sprintf(tmp, "%s/%s", cd_path, filename);
+      strcpy(cd_path, tmp);
+    }
+    
+    // print working directory 
+    send_cd_path();
+    Serial.print(F("dir changed to:"));
+    Serial.println(cd_path);    
+    return;
+  } 
+
+  // errors 
+  
+  // check if the directory exists
+  if(!SD.exists(filename)) {
+    Serial.println(F("dir not found"));
+    send_string_to_cpu(DIR_NOT_FOUND);
+    return;
+  }
+  
+  File myFile = SD.open(filename);
+  bool isDir = myFile.isDirectory();
+  myFile.close();
+  
+  if(!isDir) {            
+    Serial.println(F("not a directory"));
+    send_string_to_cpu(NOT_A_DIRECTORY);    
+  }
+  else {
+    Serial.println(F("error changing dir"));
+    send_string_to_cpu(CANT_CD_DIR);    
+  }
 }
 
 // **************************************************************************************
@@ -570,25 +805,19 @@ void loop() {
   int data = receive_byte_from_cpu();
   if(TIMEOUT) return;
 
-  if(data == CMD_READ) {
-    comando_read();
-    if(TIMEOUT) Serial.println(F("TIMEOUT during CMD_READ"));    
-  }
-  else if(data == CMD_WRITE) {
-    comando_write();
-    if(TIMEOUT) Serial.println(F("TIMEOUT during CMD_WRITE"));
-  }
-  else if(data == CMD_DIR) {
-    comando_dir();
-    if(TIMEOUT) Serial.println(F("TIMEOUT during DIR"));    
-  }  
-  else if(data == CMD_DEL) {
-    comando_del();
-    if(TIMEOUT) Serial.println(F("TIMEOUT during DEL"));    
-  }
+       if(data == CMD_READ)  comando_read();      
+  else if(data == CMD_WRITE) comando_write();      
+  else if(data == CMD_DEL)   comando_del();    
+  else if(data == CMD_RMDIR) comando_rmdir();    
+  else if(data == CMD_MKDIR) comando_mkdir();     
+  else if(data == CMD_CD)    comando_cd();      
+  else if(data == CMD_DIR)   comando_dir(data);    
+  else if(data == CMD_LS)    comando_dir(data);    
   else {
     Serial.print(F("unknown command "));
     Serial.print(data);
     Serial.println(F(" received"));
   }
+  
+  if(TIMEOUT) Serial.println(F("TIMEOUT during command"));    
 }
