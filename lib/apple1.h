@@ -116,12 +116,14 @@ void apple1_input_line(byte *buffer, byte max) {
    buffer[x]=0;
 }
 
-const byte prompt_char = ']';
+#ifndef INPUT_LINE_PROMPT_CHAR
+#define INPUT_LINE_PROMPT_CHAR '>'
+#endif 
 
 void apple1_input_line_prompt(byte *buffer, byte max) {
    byte x=0;
 
-   woz_putc(prompt_char);
+   woz_putc(INPUT_LINE_PROMPT_CHAR);
 
    while(1) {
       byte c = apple1_getkey();
@@ -141,7 +143,7 @@ void apple1_input_line_prompt(byte *buffer, byte max) {
             x--;
             buffer[x] = 0;
             woz_putc('\r');
-            woz_putc(prompt_char);
+            woz_putc(INPUT_LINE_PROMPT_CHAR);
             woz_puts(buffer);
          }
       }
