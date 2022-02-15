@@ -3,10 +3,10 @@
 
 byte **const BASIC_LOMEM = (byte **) 0x004a;   // lomem pointer used by integer BASIC
 byte **const BASIC_HIMEM = (byte **) 0x004c;   // himem pointer used by integer BASIC
-byte *const KEYBUF        = (byte *) 0x0200;   // use the same keyboard buffer as in WOZ monitor
+byte  *const KEYBUF      = (byte  *) 0x0200;   // use the same keyboard buffer as in WOZ monitor
 
 #define KEYBUFSTART (0x200)
-#define KEYBUFLEN   (40)
+#define KEYBUFLEN   (79)
 
 // keyboard buffer 0x200-27F uses only the first 40 bytes, the rest is recycled for free mem
 
@@ -15,30 +15,31 @@ byte *const filename = (byte *) (KEYBUFSTART+KEYBUFLEN+6     ); // [33] stores a
 byte *const hex1     = (byte *) (KEYBUFSTART+KEYBUFLEN+6+33  ); // [5]  stores a hex parameter
 byte *const hex2     = (byte *) (KEYBUFSTART+KEYBUFLEN+6+33+5); // [5]  stores a hex parameter
 
+const byte OK_RESPONSE  = 0x00;
 const byte ERR_RESPONSE = 0xFF;
 
 // command constants, which are also byte commands to send to the MCU
-const byte CMD_READ  =  0;
-const byte CMD_WRITE =  1;
-const byte CMD_DIR   =  2;
-const byte CMD_TIME  =  3;
-const byte CMD_LOAD  =  4;
-const byte CMD_RUN   =  5;
-const byte CMD_SAVE  =  6;
-const byte CMD_TYPE  =  7;
-const byte CMD_DUMP  =  8;
-const byte CMD_JMP   =  9;
-const byte CMD_BAS   = 10;
-const byte CMD_DEL   = 11;
-const byte CMD_LS    = 12;
-const byte CMD_CD    = 13;
-const byte CMD_MKDIR = 14;
-const byte CMD_RMDIR = 15;
-const byte CMD_RM    = 16;
-const byte CMD_MD    = 17;
-const byte CMD_RD    = 18;
-const byte CMD_PWD   = 19;
-const byte CMD_EXIT  = 16;
+const byte CMD_READ  =  0;  
+const byte CMD_WRITE =  1;  
+const byte CMD_DIR   =  2;  
+const byte CMD_TIME  =  3;  
+const byte CMD_LOAD  =  4;  
+const byte CMD_RUN   =  5;  
+const byte CMD_SAVE  =  6;  
+const byte CMD_TYPE  =  7;  
+const byte CMD_DUMP  =  8;  
+const byte CMD_JMP   =  9;  
+const byte CMD_BAS   = 10;  
+const byte CMD_DEL   = 11;  
+const byte CMD_LS    = 12;  
+const byte CMD_CD    = 13;  
+const byte CMD_MKDIR = 14;  
+const byte CMD_RMDIR = 15;  
+const byte CMD_RM    = 16;  
+const byte CMD_MD    = 17;  
+const byte CMD_RD    = 18;  
+const byte CMD_PWD   = 19;  
+const byte CMD_EXIT  = 20;  
 
 // the list of recognized commands
 byte *DOS_COMMANDS[] = {
@@ -99,7 +100,7 @@ void get_token(byte *dest, byte max) {
 
 // looks "command" into table "DOS_COMMANDS" and
 // if found sets the index in "cmd", 0xFF if not found
-void find_command() {
+void find_cmd() {
    for(cmd=0; cmd<sizeof(DOS_COMMANDS); cmd++) {
       byte *ptr = DOS_COMMANDS[cmd];
       for(byte j=0;;j++) {
@@ -135,12 +136,17 @@ void hex_to_word(byte *str) {
 #include "cmd_mkdir.h"
 #include "cmd_rmdir.h"
 #include "cmd_chdir.h"
+#include "cmd_pwd.h"
+
+#define PROMPT_ALWAYS 1
 
 void console() {   
 
    VIA_init();
 
-   woz_puts("\r\r*** SD CARD OS 1.0\r");
+   woz_puts("\r\r*** SD CARD OS 1.0\r\r");
+
+   cmd = 0;
 
    // main loop   
    while(1) {
@@ -148,7 +154,12 @@ void console() {
       // clear input buffer
       for(byte i=0; i<KEYBUFLEN; i++) KEYBUF[i] = 0;
 
-      woz_putc('\r');
+      // do not print extra newline for commands that do not have output (CD)
+      if(cmd != CMD_CD) woz_putc('\r');                  
+
+      // performs a PWD     
+      comando_pwd();        
+      
       apple1_input_line_prompt(KEYBUF, KEYBUFLEN);
       if(KEYBUF[0]!=0) woz_putc('\r');
 
@@ -156,7 +167,7 @@ void console() {
       token_ptr = KEYBUF;
       get_token(command, 5);
 
-      find_command();  // put command in cmd
+      find_cmd();  // put command in cmd
       
       if(cmd == CMD_READ) {
          get_token(filename, 32);  // parse filename
@@ -308,12 +319,10 @@ void console() {
       }
       else if(cmd == CMD_CD) {
          get_token(filename, 32);  // parse filename
-         comando_cd();
+         comando_cd();         
       }
-      else if(cmd == CMD_PWD) {
-         // PWD is a CD with no args
-         filename[0] = 0;
-         comando_cd();
+      else if(cmd == CMD_PWD) {                  
+         comando_pwd();         
       }
       else if(cmd == CMD_EXIT) {
          woz_puts("BYE\r");

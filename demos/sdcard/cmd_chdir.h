@@ -7,6 +7,14 @@ void comando_cd() {
    send_string_to_MCU(filename);
    if(TIMEOUT) return;
 
-   print_string_response();
-   return;
+   // response
+   byte response = receive_byte_from_MCU();
+   if(TIMEOUT) return;
+
+   if(response == ERR_RESPONSE) {
+      // error with file, print message
+      print_string_response();
+      woz_putc('\r'); // add an extra newline because CD is a command without output 
+      return;
+   }
 }
