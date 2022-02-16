@@ -30,11 +30,13 @@ void comando_dump() {
 
    // get file bytes   
    byte row = 0;
+   byte print_on = 1;
    for(word t=0;t!=tmpword;t++) {
       byte data = receive_byte_from_MCU();
       if(TIMEOUT) return;
 
       if(!(t>=start_address && t<=end_address)) continue;
+      if(!print_on) continue;
 
       if(row == 0) {
          woz_putc('\r');
@@ -50,7 +52,7 @@ void comando_dump() {
       
       if(apple1_readkey()) {
          woz_puts("*BRK*\r");
-         break;
+         print_on = 0;
       }
    }
 }

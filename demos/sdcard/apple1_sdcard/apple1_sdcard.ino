@@ -175,6 +175,7 @@ const int CMD_DEL   = 11;
 const int CMD_LS    = 12;
 const int CMD_CD    = 13;
 const int CMD_MKDIR = 14;
+const int CMD_PWD   = 19;
 const int CMD_RMDIR = 15;
 
 const int ERR_RESPONSE = 255;
@@ -705,10 +706,6 @@ void comando_mkdir() {
 // **************************************************************************************
 // **************************************************************************************
 
-void send_cd_path() {
-  send_string_to_cpu(cd_path);
-}
-
 void comando_cd() {
   Serial.println(F("command CD received from CPU"));
 
@@ -722,9 +719,19 @@ void comando_cd() {
 
   // CD without arguments
   if(filename[0] == 0) {
-    // does nothing simply prints the path    
-    send_cd_path();
+    // ok response
+    send_byte_to_cpu(OK_RESPONSE);
     return;
+  }
+
+  // CD ..
+  if(filename[0] == '.' && filename[1] == '.' && filename[2] == 0) {  
+    strcpy(filename, cd_path);
+    for(int t=strlen(filename)-1;t>=1;t--) {
+      int c = filename[t];
+      filename[t] = 0;
+      if(c == '/') break;        
+    }
   }
 
   // CD /
@@ -733,13 +740,14 @@ void comando_cd() {
     if(SD.chdir()) {
       // set root working directory
       strcpy(cd_path, filename);      
-      send_cd_path();
       Serial.print(F("dir changed to:"));
       Serial.println(cd_path);
+      send_byte_to_cpu(OK_RESPONSE);
       return;      
     }   
     else {
       Serial.println(F("error changing dir"));
+      send_byte_to_cpu(ERR_RESPONSE);
       send_string_to_cpu(CANT_CD_DIR);
       return;
     }
@@ -748,28 +756,32 @@ void comando_cd() {
   // CD dirname  
   if(SD.chdir(filename)) {
     // update working directory
-    if(filename[0] == '/') {
-      // replace cwd
-      strcpy(cd_path, filename);      
+    if(filename[0] == '/') {       
+      strcpy(cd_path, filename);     // path is absolute, replace cwd   
     }
     else {
-      // append to cwd
+      // path is relative, append to cwd
+      if(cd_path[0] == '/' && cd_path[1] == 0) {        
+        cd_path[0] = 0;  // avoid the double slash ("//DIR") when cwd is root 
+      }
       sprintf(tmp, "%s/%s", cd_path, filename);
       strcpy(cd_path, tmp);
     }
     
-    // print working directory 
-    send_cd_path();
+    
     Serial.print(F("dir changed to:"));
     Serial.println(cd_path);    
+    send_byte_to_cpu(OK_RESPONSE);
     return;
   } 
 
   // errors 
+
+  send_byte_to_cpu(ERR_RESPONSE);
   
   // check if the directory exists
   if(!SD.exists(filename)) {
-    Serial.println(F("dir not found"));
+    Serial.println(F("dir not found"));    
     send_string_to_cpu(DIR_NOT_FOUND);
     return;
   }
@@ -779,13 +791,24 @@ void comando_cd() {
   myFile.close();
   
   if(!isDir) {            
-    Serial.println(F("not a directory"));
+    Serial.println(F("not a directory"));    
     send_string_to_cpu(NOT_A_DIRECTORY);    
   }
   else {
-    Serial.println(F("error changing dir"));
+    Serial.println(F("error changing dir"));    
     send_string_to_cpu(CANT_CD_DIR);    
   }
+}
+
+// **************************************************************************************
+// **************************************************************************************
+// ********************************* @CMD_PWD *******************************************
+// **************************************************************************************
+// **************************************************************************************
+
+void comando_pwd() {
+  Serial.println(F("command PWD received from CPU"));
+  send_string_to_cpu(cd_path);
 }
 
 // **************************************************************************************
@@ -800,12 +823,15 @@ void loop() {
   int data = receive_byte_from_cpu();
   if(TIMEOUT) return;
 
+  unsigned long start_time = millis();
+
        if(data == CMD_READ)  comando_read();      
   else if(data == CMD_WRITE) comando_write();      
   else if(data == CMD_DEL)   comando_del();    
   else if(data == CMD_RMDIR) comando_rmdir();    
   else if(data == CMD_MKDIR) comando_mkdir();     
   else if(data == CMD_CD)    comando_cd();      
+  else if(data == CMD_PWD)   comando_pwd();      
   else if(data == CMD_DIR)   comando_dir(data);    
   else if(data == CMD_LS)    comando_dir(data);    
   else {
@@ -813,6 +839,9 @@ void loop() {
     Serial.print(data);
     Serial.println(F(" received"));
   }
+
+  Serial.print(F("command processing time: "));
+  Serial.println(millis() - start_time);
   
   if(TIMEOUT) Serial.println(F("TIMEOUT during command"));    
 }

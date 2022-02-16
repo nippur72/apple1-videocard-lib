@@ -114,9 +114,20 @@ void print_string_response() {
       if(TIMEOUT) break;
       if(data == 0) break;  // string terminator
       else woz_putc(data);
+   }
+}
+
+// print a string sent by the MCU, breakable via keyboard
+void print_string_response_brk() {
+   byte print_on = 1;
+   while(1) {
+      byte data = receive_byte_from_MCU();
+      if(TIMEOUT) break;
+      if(data == 0) break;  // string terminator
+      if(print_on) woz_putc(data);
       if(apple1_readkey()) {
-         woz_puts("*BRK*\r");
-         break;
+         woz_puts("*BRK*\r");         
+         print_on = 0;
       }      
    }
 }

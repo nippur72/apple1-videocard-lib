@@ -6,5 +6,5 @@ void comando_dir(byte cmd) {
    send_string_to_MCU(filename);
    if(TIMEOUT) return;
 
-   print_string_response();   
+   print_string_response_brk();   
 }

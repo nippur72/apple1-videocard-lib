@@ -22,14 +22,15 @@ void comando_type() {
    receive_word_from_mcu();
    if(TIMEOUT) return;
 
-   // get file bytes   
+   // get file bytes
+   byte print_on = 1;   
    for(word t=0;t!=tmpword;t++) {
       byte data = receive_byte_from_MCU();
       if(TIMEOUT) return;
-      woz_putc(data);
+      if(print_on) woz_putc(data);
       if(apple1_readkey()) {
          woz_puts("*BRK*\r");
-         break;
+         print_on = 0;
       }
    }
 }
