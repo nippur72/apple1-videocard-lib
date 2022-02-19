@@ -4,15 +4,9 @@
 #define POKE(a,b) (*((byte *)(a))=(byte)(b))
 #define PEEK(a)   (*((byte *)(a)))
 
-#ifdef KICKC_NIGHTLY
 #define HIBYTE(c) (BYTE1(c))
 #define LOBYTE(c) (BYTE0(c))
 #define EXPORT __export
-#else
-#define HIBYTE(c) (>(c))
-#define LOBYTE(c) (<(c))
-#define EXPORT export
-#endif
 
 #define NOP asm { nop }
 
