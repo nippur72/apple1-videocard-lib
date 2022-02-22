@@ -10,7 +10,7 @@ void demo_interrupt() {
    _hours   = 0;
 
    // installs the interrupt handler routine
-   install_interrupt();
+   install_interrupt((word) &time_interrupt_handler);
 
    // enables interrupts on the TMS9918
    tms_set_interrupt_bit(INTERRUPT_ENABLED);

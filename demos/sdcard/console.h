@@ -38,8 +38,9 @@ const byte CMD_RMDIR = 15;
 const byte CMD_RM    = 16;  
 const byte CMD_MD    = 17;  
 const byte CMD_RD    = 18;  
-const byte CMD_PWD   = 19;  
-const byte CMD_EXIT  = 20;  
+const byte CMD_PWD   = 19;
+const byte CMD_TEST  = 20;
+const byte CMD_EXIT  = 21;
 
 // the list of recognized commands
 byte *DOS_COMMANDS[] = {
@@ -63,6 +64,7 @@ byte *DOS_COMMANDS[] = {
    "MD",
    "RD",
    "PWD",
+   "TEST",
    "EXIT"
 };
 
@@ -137,8 +139,7 @@ void hex_to_word(byte *str) {
 #include "cmd_rmdir.h"
 #include "cmd_chdir.h"
 #include "cmd_pwd.h"
-
-#define PROMPT_ALWAYS 1
+#include "cmd_test.h"
 
 void console() {   
 
@@ -323,6 +324,9 @@ void console() {
       }
       else if(cmd == CMD_PWD) {                  
          comando_pwd();         
+      }
+      else if(cmd == CMD_TEST) {
+         comando_test();
       }
       else if(cmd == CMD_EXIT) {
          woz_puts("BYE\r");

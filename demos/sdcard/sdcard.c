@@ -38,13 +38,25 @@
 #include <apple1.h>
 #include <string.h>
 
-byte *const PORTB = (byte *) 0xA000;  // port B register
-byte *const PORTA = (byte *) 0xA001;  // port A register
-byte *const DDRB  = (byte *) 0xA002;  // port A data direction register
-byte *const DDRA  = (byte *) 0xA003;  // port B data direction register
+byte *const VIA_PORTB   = (byte *) 0xA000;  // port B register
+byte *const VIA_PORTA   = (byte *) 0xA001;  // port A register
+byte *const VIA_DDRB    = (byte *) 0xA002;  // port A data direction register
+byte *const VIA_DDRA    = (byte *) 0xA003;  // port B data direction register
+byte *const VIA_T1CL    = (byte *) 0xA004;  // 
+byte *const VIA_T1CH    = (byte *) 0xA005;  // 
+byte *const VIA_T1LL    = (byte *) 0xA006;  // 
+byte *const VIA_T1LH    = (byte *) 0xA007;  // 
+byte *const VIA_T2CL    = (byte *) 0xA008;  // 
+byte *const VIA_T2CH    = (byte *) 0xA009;  // 
+byte *const VIA_SR      = (byte *) 0xA00A;  // 
+byte *const VIA_ACR     = (byte *) 0xA00B;  // 
+byte *const VIA_PCR     = (byte *) 0xA00C;  // 
+byte *const VIA_IFR     = (byte *) 0xA00D;  // 
+byte *const VIA_IER     = (byte *) 0xA00E;  // 
+byte *const VIA_PORTANH = (byte *) 0xA00F;  // 
 
-#define CPU_STROBE(v) (*PORTB = (v))  /* CPU strobe is bit 0 OUTPUT */
-#define MCU_STROBE    (*PORTB & 128)  /* MCU strobe is bit 7 INPUT  */
+#define CPU_STROBE(v) (*VIA_PORTB = (v))  /* CPU strobe is bit 0 OUTPUT */
+#define MCU_STROBE    (*VIA_PORTB & 128)  /* MCU strobe is bit 7 INPUT  */
 
 // global variables that are shared among the functions
 __address( 3) byte TIMEOUT;
@@ -58,6 +70,10 @@ __address(16) byte hex_to_word_ok;
 __address(17) byte cmd;
 __address(18) byte *token_ptr;
 
+#define MCU_STROBE_HIGH 128
+#define MCU_STROBE_LOW  0
+
+/*
 void wait_mcu_strobe(byte v) {   
    if(TIMEOUT) return;
 
@@ -66,34 +82,47 @@ void wait_mcu_strobe(byte v) {
       TIMEOUT_CNT++;
       if(TIMEOUT_CNT > TIMEOUT_MAX) {
          TIMEOUT = 1;
-         return;
+         break;
       }
-   }   
+   }
+}
+*/
+
+void wait_mcu_strobe(byte v) {   
+   if(TIMEOUT) return;
+
+   TIMEOUT_CNT = 0;
+   while(v ^ MCU_STROBE) {
+      TIMEOUT_CNT++;
+      if(TIMEOUT_CNT > TIMEOUT_MAX) {
+         TIMEOUT = 1;
+         break;
+      }
+   }
 }
 
-void send_byte_to_MCU(byte data) {   
-   *DDRA = 0xFF;        // set port A as output   
-   *PORTA = data;       // deposit byte on the data port   
-   CPU_STROBE(1);       // set strobe high   
-   wait_mcu_strobe(1);  // wait for the MCU to read the data   
-   CPU_STROBE(0);       // set strobe low   
-   wait_mcu_strobe(0);  // wait for the MCU to set strobe low
+void send_byte_to_MCU(byte data) {
+   *VIA_DDRA = 0xFF;                     // set port A as output
+   *VIA_PORTA = data;                    // deposit byte on the data port
+   CPU_STROBE(1);                    // set strobe high
+   wait_mcu_strobe(MCU_STROBE_HIGH); // wait for the MCU to read the data
+   CPU_STROBE(0);                    // set strobe low
+   wait_mcu_strobe(MCU_STROBE_LOW);  // wait for the MCU to set strobe low
 }
 
-// note: allocates 1 byte for return value
 byte receive_byte_from_MCU() {
-   *DDRA = 0;          // set port A as input
-   CPU_STROBE(0);      // set listen
-   wait_mcu_strobe(1); // wait for the MCU to deposit data
-   byte data = *PORTA; // read data
-   CPU_STROBE(1);      // set strobe high
-   wait_mcu_strobe(0); // wait for the MCU to set strobe low
-   CPU_STROBE(0);      // set strobe low
+   *VIA_DDRA = 0;                        // set port A as input
+   CPU_STROBE(0);                    // set listen
+   wait_mcu_strobe(MCU_STROBE_HIGH); // wait for the MCU to deposit data
+   byte data = *VIA_PORTA;               // read data
+   CPU_STROBE(1);                    // set strobe high
+   wait_mcu_strobe(MCU_STROBE_LOW);  // wait for the MCU to set strobe low
+   CPU_STROBE(0);                    // set strobe low
    return data;
 }
 
 void VIA_init() {
-   *DDRB = 1;       // pin 1 is output (CPU_STROBE), pin7 is input (MCU_STROBE)
+   *VIA_DDRB = 1;       // pin 1 is output (CPU_STROBE), pin7 is input (MCU_STROBE)
    CPU_STROBE(0);   // initial state
 }
 

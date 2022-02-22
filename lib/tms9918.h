@@ -1,5 +1,8 @@
 #ifndef TMS9918_H
 #define TMS9918_H
+
+#define TMS9918 1
+
 // TODO a bitmapped text writing routine (double size ecc)
 // TODO console like text output in screen 2
 // TODO more fonts (C64 and PET/VIC20)

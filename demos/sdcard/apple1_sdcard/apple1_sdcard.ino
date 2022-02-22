@@ -177,6 +177,7 @@ const int CMD_CD    = 13;
 const int CMD_MKDIR = 14;
 const int CMD_PWD   = 19;
 const int CMD_RMDIR = 15;
+const int CMD_TEST  = 20;
 
 const int ERR_RESPONSE = 255;
 const int OK_RESPONSE  =   0;
@@ -833,7 +834,13 @@ void loop() {
   else if(data == CMD_CD)    comando_cd();      
   else if(data == CMD_PWD)   comando_pwd();      
   else if(data == CMD_DIR)   comando_dir(data);    
-  else if(data == CMD_LS)    comando_dir(data);    
+  else if(data == CMD_LS)    comando_dir(data);
+  else if(data == CMD_TEST) {
+    while(!TIMEOUT) {
+      int data = receive_byte_from_cpu();
+      send_byte_to_cpu(data ^ 0xFF);
+    }
+  }
   else {
     Serial.print(F("unknown command "));
     Serial.print(data);
