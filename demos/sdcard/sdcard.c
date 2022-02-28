@@ -73,22 +73,7 @@ __address(18) byte *token_ptr;
 #define MCU_STROBE_HIGH 128
 #define MCU_STROBE_LOW  0
 
-/*
-void wait_mcu_strobe(byte v) {   
-   if(TIMEOUT) return;
-
-   TIMEOUT_CNT = 0;
-   while((v==0 && MCU_STROBE != 0) || (v!=0 && MCU_STROBE == 0)) {
-      TIMEOUT_CNT++;
-      if(TIMEOUT_CNT > TIMEOUT_MAX) {
-         TIMEOUT = 1;
-         break;
-      }
-   }
-}
-*/
-
-void wait_mcu_strobe(byte v) {   
+void wait_mcu_strobe(byte v) {
    if(TIMEOUT) return;
 
    TIMEOUT_CNT = 0;
@@ -102,8 +87,8 @@ void wait_mcu_strobe(byte v) {
 }
 
 void send_byte_to_MCU(byte data) {
-   *VIA_DDRA = 0xFF;                     // set port A as output
-   *VIA_PORTA = data;                    // deposit byte on the data port
+   *VIA_DDRA = 0xFF;                 // set port A as output
+   *VIA_PORTA = data;                // deposit byte on the data port
    CPU_STROBE(1);                    // set strobe high
    wait_mcu_strobe(MCU_STROBE_HIGH); // wait for the MCU to read the data
    CPU_STROBE(0);                    // set strobe low
@@ -111,10 +96,10 @@ void send_byte_to_MCU(byte data) {
 }
 
 byte receive_byte_from_MCU() {
-   *VIA_DDRA = 0;                        // set port A as input
+   *VIA_DDRA = 0;                    // set port A as input
    CPU_STROBE(0);                    // set listen
    wait_mcu_strobe(MCU_STROBE_HIGH); // wait for the MCU to deposit data
-   byte data = *VIA_PORTA;               // read data
+   byte data = *VIA_PORTA;           // read data
    CPU_STROBE(1);                    // set strobe high
    wait_mcu_strobe(MCU_STROBE_LOW);  // wait for the MCU to set strobe low
    CPU_STROBE(0);                    // set strobe low
@@ -122,8 +107,8 @@ byte receive_byte_from_MCU() {
 }
 
 void VIA_init() {
-   *VIA_DDRB = 1;       // pin 1 is output (CPU_STROBE), pin7 is input (MCU_STROBE)
-   CPU_STROBE(0);   // initial state
+   *VIA_DDRB = 1;      // pin 1 is output (CPU_STROBE), pin7 is input (MCU_STROBE)
+   CPU_STROBE(0);      // initial state
 }
 
 // send a string to the MCY (0 terminator is sent as well)
