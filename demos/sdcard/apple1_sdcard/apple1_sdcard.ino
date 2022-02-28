@@ -1,11 +1,3 @@
-#include <Regexp.h>
-#include <SPI.h>
-#include "SdFat.h"
-
-SdFat SD;
-
-#define SD_CS_PIN SS
-
 /*
    +-----------+                     +-----------------+ 
    |           |                     |     ARDUINO     |
@@ -26,6 +18,44 @@ SdFat SD;
    +-----------+                     +-----------------+ 
 */
 
+/*
+PORT ASSIGNMENT FOR FAST READ/WRITE
+===================================
+BIT 0:      PORTD[2]
+BIT 1:      PORTD[3]
+BIT 2:      PORTD[4]
+BIT 3:      PORTD[5]
+BIT 4:      PORTD[6]
+BIT 5:      PORTD[7]
+BIT 6:      PORTB[0]
+BIT 7:      PORTB[1]
+MCU_STROBE: PORTC[0]
+CPU_STROBE: PORTC[1]
+
+in Verilog syntax: data = { PORTB[1:0], PORTD[7:2] };
+
+*/
+
+#define FASTWRITE 1
+
+#ifdef FASTWRITE
+#define get_cpu_strobe    ((PORTC >> 1) & 1)
+#define set_mcu_strobe(c) PORTC = (PORTC & 0xFE) | (c)
+#else
+#define get_cpu_strobe digitalRead(CPU_STROBE)
+#define set_mcu_strobe(c) digitalWrite(MCU_STROBE,(c))
+#endif
+
+
+#include <Regexp.h>
+#include <SPI.h>
+#include "SdFat.h"
+
+SdFat SD;
+
+#define SD_CS_PIN SS
+
+
 // pin definitions
 
 #define BIT0 2   
@@ -42,17 +72,17 @@ SdFat SD;
 #define MCU_STROBE  14   
 #define CPU_STROBE  15   
 
-// indicates that a timeout occurred during wait()
+// indicates that a timeout occurred during wait_cpu_strobe()
 int TIMEOUT = 0;
 
-void wait(int pin, int value) {
+void wait_cpu_strobe(int value) {
     
   unsigned long start_time = millis();  
   unsigned long elapsed;  
 
   if(TIMEOUT) return;
   
-  while(digitalRead(pin) != value) {
+  while(get_cpu_strobe != value) {
     elapsed = millis() - start_time;
     if(elapsed > 500) {
       TIMEOUT = 1;
@@ -104,9 +134,12 @@ int receive_byte_from_cpu() {
   // both strobes are 0   
   
   // CPU deposits data byte and sets strobe high
-  wait(CPU_STROBE, HIGH);           
+  wait_cpu_strobe(HIGH);           
   
   // read the data byte
+  #ifdef FASTWRITE  
+  int data = ((PORTB & 0x03)<<6) | (PORTD >> 2);  // data = { PORTB[1:0], PORTD[7:2] }
+  #else
   int data = 
     (digitalRead(BIT0) << 0) |
     (digitalRead(BIT1) << 1) |
@@ -116,15 +149,16 @@ int receive_byte_from_cpu() {
     (digitalRead(BIT5) << 5) |
     (digitalRead(BIT6) << 6) |
     (digitalRead(BIT7) << 7);
+  #endif 
 
   // after reading the byte, MCU sets strobe high
-  digitalWrite(MCU_STROBE, HIGH);
+  set_mcu_strobe(HIGH);
 
   // CPU now sets strobe low
-  wait(CPU_STROBE, LOW);
+  wait_cpu_strobe(LOW);
 
   // and MCU sets strobe low
-  digitalWrite(MCU_STROBE, LOW);
+  set_mcu_strobe(LOW);
     
   return data;
 }
@@ -137,6 +171,10 @@ void send_byte_to_cpu(int data) {
   // both strobes are 0
   
   // put byte on the data port
+  #ifdef FASTWRITE  
+  PORTB = (PORTB & 0xFC) | ((data >> 6) & 0x03);   // PORTB[1:0] = data[7:6];
+  PORTD = (PORTD & 0x03) | (data << 2);            // PORTD[7:2] = data[5:0];  
+  #else
   digitalWrite(BIT0, data &   1);
   digitalWrite(BIT1, data &   2);
   digitalWrite(BIT2, data &   4);
@@ -145,18 +183,19 @@ void send_byte_to_cpu(int data) {
   digitalWrite(BIT5, data &  32);
   digitalWrite(BIT6, data &  64);
   digitalWrite(BIT7, data & 128);
+  #endif
   
   // after depositing data byte, MCU sets strobe high
-  digitalWrite(MCU_STROBE, HIGH);
+  set_mcu_strobe(HIGH);
   
   // wait for CPU to set strobe high
-  wait(CPU_STROBE, HIGH);  
+  wait_cpu_strobe(HIGH);  
   
   // tells CPU byte we are finished
-  digitalWrite(MCU_STROBE, LOW); 
+  set_mcu_strobe(LOW); 
 
   // wait for CPU to set strobe low
-  wait(CPU_STROBE, LOW);  
+  wait_cpu_strobe(LOW);  
 }
 
 // *********************************************************************************************
