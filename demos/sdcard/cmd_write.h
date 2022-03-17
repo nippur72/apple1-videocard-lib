@@ -60,7 +60,7 @@ void comando_write() {
    // print feedback to user
    woz_putc('\r');
    woz_puts(filename);
-   woz_puts(": ");
+   woz_puts(":\r");
    woz_print_hexword(start_address);
    woz_putc('.');
    woz_print_hexword(end_address);

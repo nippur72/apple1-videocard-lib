@@ -1,5 +1,5 @@
 #include <stdlib.h>
-#include <stdlib.h>
+#include <string.h>
 
 byte **const BASIC_LOMEM = (byte **) 0x004a;   // lomem pointer used by integer BASIC
 byte **const BASIC_HIMEM = (byte **) 0x004c;   // himem pointer used by integer BASIC
@@ -15,8 +15,9 @@ byte *const filename = (byte *) (KEYBUFSTART+KEYBUFLEN+6     ); // [33] stores a
 byte *const hex1     = (byte *) (KEYBUFSTART+KEYBUFLEN+6+33  ); // [5]  stores a hex parameter
 byte *const hex2     = (byte *) (KEYBUFSTART+KEYBUFLEN+6+33+5); // [5]  stores a hex parameter
 
-const byte OK_RESPONSE  = 0x00;
-const byte ERR_RESPONSE = 0xFF;
+const byte OK_RESPONSE   = 0x00;
+const byte WAIT_RESPONSE = 0x01;
+const byte ERR_RESPONSE  = 0xFF;
 
 // command constants, which are also byte commands to send to the MCU
 const byte CMD_READ  =  0;  
@@ -125,6 +126,27 @@ void hex_to_word(byte *str) {
       else hex_to_word_ok = 0;
    }
    if(i>4 || i==0) hex_to_word_ok = 0;
+}
+
+void strcat(char *dest, char *src) {
+   while(*dest) dest++;
+   while(*src) *dest++ = *src++;
+   *dest = 0;
+}
+
+void append_hex_digit(char *dest, byte digit) {
+   while(*dest) dest++;
+   if(digit<10) digit += '0'; 
+   else         digit += 'A' - 10;   
+   *dest++ = digit;
+   *dest = 0;      
+}
+
+void append_hex_tmpword(char *dest) {   
+   append_hex_digit(dest, *((byte *)&tmpword+1) >> 4);
+   append_hex_digit(dest, *((byte *)&tmpword+1) & 0x0F);
+   append_hex_digit(dest, *((byte *)&tmpword+0) >> 4);
+   append_hex_digit(dest, *((byte *)&tmpword+0) & 0x0F);   
 }
 
 #include "cmd_read.h"
@@ -238,7 +260,7 @@ void console() {
             woz_puts("?MISSING FILENAME");
             continue;
          }
-         comando_load();
+         comando_load_bas();
       }
       else if(cmd == CMD_SAVE) {
          get_token(filename, 32);  // parse filename
@@ -246,7 +268,33 @@ void console() {
             woz_puts("?MISSING FILENAME");
             continue;
          }
-         comando_save();
+         //comando_save();
+         
+         get_token(hex1, 4);
+         if(hex1[0] != 0) {
+            // it's SAVE binary file
+            hex_to_word(hex1);
+            if(!hex_to_word_ok) {
+               woz_puts("?BAD ADDRESS");
+               continue;
+            }
+            start_address = tmpword;         
+
+            strcat(filename, "#06");
+            append_hex_tmpword(filename);
+
+            get_token(hex2, 4);
+            hex_to_word(hex2);
+            if(!hex_to_word_ok) {
+               woz_puts("?BAD ADDRESS");
+               continue;
+            }
+            end_address = tmpword;
+            comando_write();
+         }
+         else {
+            comando_save_bas();
+         }         
       }
       else if(cmd == CMD_TYPE) {
          get_token(filename, 32);  // parse filename

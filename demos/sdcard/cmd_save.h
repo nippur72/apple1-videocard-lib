@@ -1,10 +1,19 @@
 // global len
 
-void comando_save() {
+void comando_save_bas() {
+
+   if(((word) *BASIC_HIMEM) < ((word) *BASIC_LOMEM)) {
+      woz_puts("?NO BASIC PROGRAM");
+      return;
+   }
 
    // send command byte
    send_byte_to_MCU(CMD_WRITE);
    if(TIMEOUT) return;
+
+   strcat(filename, "#F1");
+   tmpword = (word) *BASIC_LOMEM;
+   append_hex_tmpword(filename);
 
    // send filename
    send_string_to_MCU(filename);
@@ -18,6 +27,8 @@ void comando_save() {
       print_string_response();
       return;
    }
+
+   woz_puts("SAVING\r");
 
    // send file size   
    //tmpword = ((word) *BASIC_HIMEM) - ((word)*BASIC_LOMEM) + 512;

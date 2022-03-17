@@ -36,7 +36,7 @@ in Verilog syntax: data = { PORTB[1:0], PORTD[7:2] };
 
 */
 
-#define FASTWRITE 1
+// #define FASTWRITE 1
 
 #ifdef FASTWRITE
 #define get_cpu_strobe    ((PORTC >> 1) & 1)
@@ -47,7 +47,8 @@ in Verilog syntax: data = { PORTB[1:0], PORTD[7:2] };
 #endif
 
 
-#include <Regexp.h>
+// #include <Regexp.h>
+
 #include <SPI.h>
 #include "SdFat.h"
 
@@ -210,6 +211,7 @@ void send_byte_to_cpu(int data) {
 const int CMD_READ  =  0;
 const int CMD_WRITE =  1;
 const int CMD_DIR   =  2;
+const int CMD_LOAD  =  4;
 const int CMD_DEL   = 11;
 const int CMD_LS    = 12;
 const int CMD_CD    = 13;
@@ -218,8 +220,9 @@ const int CMD_PWD   = 19;
 const int CMD_RMDIR = 15;
 const int CMD_TEST  = 20;
 
-const int ERR_RESPONSE = 255;
-const int OK_RESPONSE  =   0;
+const int ERR_RESPONSE  = 255;
+const int WAIT_RESPONSE =   1;
+const int OK_RESPONSE   =   0;
 
 char filename[64]; 
 char tmp[64];
@@ -260,6 +263,8 @@ void setup() {
   last_dir = -1;  // no previous data direction  
   set_data_port_direction(DIR_INPUT);
 
+  /*
+  // regex disabled for now
   MatchState ms;
   char buf [100] = { "The quick " };
   ms.Target (buf);
@@ -267,6 +272,7 @@ void setup() {
   if(result >0) {
     Serial.println("match!");  
   }
+  */
 
   // set working directory to root
   strcpy(cd_path, "/");
@@ -400,6 +406,7 @@ void print_dir_entry(File dir, int list_files, int command) {
 
     // send file size or directory
     entry.getName(filename, 64);
+    strtoupper(filename);
     
     if((list_files == 0 && entry.isDirectory()) || (list_files == 1 && !entry.isDirectory())) {
       if(entry.isDirectory()) {
@@ -429,16 +436,42 @@ void print_dir_entry(File dir, int list_files, int command) {
            send_byte_to_cpu('\r');           
         }
         else {
-           // BUG the following line does not work
-           // sprintf(tmp, "%5d %s", entry.size(), filename);        
-           // use this instead
+                               
+           char type[5];
+           char address[5];      
+           
+           strcpy(type,"");
+           strcpy(address, ""); 
+
+           char *x = strchr(filename, '#');
+           if(x != NULL) {
+              *x++ = 0;              
+              if(x[0]=='0' && x[1]=='6') {
+                 strcpy(type,"BIN ");
+                 strcpy(address,x+2);  
+              }
+              else if(x[0]=='F' && x[1]=='1') {
+                 strcpy(type,"BAS ");
+                 strcpy(address,x+2);  
+              }        
+              else {
+                 strcpy(type,"??? ");
+              }
+           }
+                                 
            sprintf(tmp, "%-15s", filename);
            print_string_to_cpu(tmp);                              
            Serial.print(filename);               
 
-           sprintf(tmp, "%6d", entry.size());
+           sprintf(tmp, "%6d ", entry.size());
            print_string_to_cpu(tmp);
-           Serial.println(tmp);     
+           Serial.print(tmp);
+
+           print_string_to_cpu(type);
+           Serial.print(type);
+                
+           print_string_to_cpu(address);
+           Serial.println(address);
 
            send_byte_to_cpu('\r');
         }
@@ -614,6 +647,173 @@ void comando_write() {
       
   Serial.println(F("file read ok"));
   send_byte_to_cpu(OK_RESPONSE);
+}
+
+// **************************************************************************************
+// **************************************************************************************
+// ********************************* CMD_LOAD  ******************************************
+// **************************************************************************************
+// **************************************************************************************
+
+void comando_load() {
+  Serial.println(F("command CMD_LOAD received from CPU"));
+
+  // reads filename as 0 terminated string
+  receive_string_from_cpu(filename);
+  if(TIMEOUT) return;
+  Serial.print(F("file to read: "));
+  Serial.println(filename);
+
+  // if a matching file name is found, use it
+  if(matchname(filename, tmp)==1) {
+    Serial.print(F("found matching file: "));
+    Serial.println(tmp);
+    strcpy(filename, tmp);
+  }
+
+  if(!SD.exists(filename)) {
+    Serial.println(F("error opening file"));
+    send_byte_to_cpu(ERR_RESPONSE);
+    send_string_to_cpu(FILE_NOT_FOUND);
+    return;    
+  }
+
+  // open the file 
+  File myFile = SD.open(filename);
+  if(!myFile) {            
+    Serial.println(F("error opening file"));
+    send_byte_to_cpu(ERR_RESPONSE);
+    send_string_to_cpu(CANT_OPEN_FILE);
+    return;
+  }  
+  Serial.println(F("file opened on the SD card"));
+
+  // ok response
+  send_byte_to_cpu(OK_RESPONSE);
+  if(TIMEOUT) return;
+  Serial.println(F("ok response sent to CPU"));
+
+  // sends matched filename
+  send_string_to_cpu(filename);
+    
+  // sends size as low and high byte
+  int size = myFile.size();
+  send_byte_to_cpu(size & 0xFF);
+  send_byte_to_cpu((size >> 8) & 0xFF);
+  if(TIMEOUT) return;
+  Serial.println(F("file size sent to CPU"));
+
+  int bytes_sent = 0;    
+  while(myFile.available() && !TIMEOUT) {      
+    send_byte_to_cpu(myFile.read());
+    if(!TIMEOUT) bytes_sent++;
+  }    
+  myFile.close();
+
+  if(TIMEOUT) {
+    Serial.print(F("timeout, bytes sent: ")); 
+    Serial.println(bytes_sent); 
+    return;
+  }
+    
+  Serial.println(F("file read ok"));
+}
+
+void strtoupper(char *str){
+      int len = strlen(str), i;
+       
+      for(i=0;i<len;i++)
+            if(str[i]>='a' && str[i]<='z')
+                 str[i] = str[i]-'a'+'A';
+}
+
+// splits filename into file_path and file_name
+// e.g. "root/myfolder/pluto" => "root/myfolder" , "pluto"
+//      "myfolder/pluto" => "myfolder", "pluto"
+//      "pluto" => "", "pluto"
+//      "/pluto" => "/", "pluto"
+
+char file_path[64];
+char file_name[64];
+
+void split_path(char *filename) {
+  strcpy(file_path, filename);
+  
+  for(int t=strlen(file_path)-1;t>0;t--) {
+    if(file_path[t] == '/') {
+       file_path[t] = 0;
+       strcpy(file_name, &file_path[t+1]);  
+       if(t==0) strcpy(file_path, "/");  // case of root folder
+       return;
+    }
+  }
+  strcpy(file_path, "");
+  strcpy(file_name, filename);  
+}
+
+//
+// returns in dest the first file that matches (starts with) "filename"
+// returns 1 if matching file is found
+// returns 0 if no matching file is found
+//
+int matchname(char *filename, char *dest) {
+  // split filename into file_path and file_name
+  split_path(filename);
+
+  Serial.print(F("after split file_path="));
+  Serial.print(file_path);
+  Serial.print(F(", file_name="));
+  Serial.println(file_name);
+
+  if(strlen(file_path)==0) Serial.println(F("scanning the current directory"));
+  else                     Serial.println(F("scanning the file_path directory"));
+
+  // open the directory containing the file
+  File dir = SD.open(strlen(file_path)==0 ? cd_path : file_path);
+
+  if(!dir) return 0;
+
+  Serial.println(F("dir opened"));
+
+  // scan all the directory
+  while(1) {
+
+    send_byte_to_cpu(WAIT_RESPONSE);
+    if(TIMEOUT) return 0;        
+    
+    File F = dir.openNextFile();
+    
+    // end of directory
+    if(!F) {
+      dir.close();
+      return 0;      
+    }
+
+    // copy filename in dest and closes it
+    F.getName(dest, 64);
+    strtoupper(dest);
+    F.close();
+
+    Serial.println(F("file entry:"));
+    Serial.println(dest);
+
+    // verify the match
+    if(strncmp(file_name, dest, strlen(filename))==0) {
+      Serial.println(F("it is matching!"));
+      // matching, dest already contains the matched file name
+
+      // if file_path is empty then it's current directory, do nothing
+      // else file_path needs to be combined with file name
+      if(file_path[0]!=0) {
+        Serial.println(F("not on current dir, joining paths"));
+        strcpy(filename, dest);
+        if(file_path[0]=='/' && file_path[1]==0)  sprintf(dest,"/%s", filename);              // case of root folder
+        else                                      sprintf(dest,"%s/%s", file_path, filename); // case of normal nested folder
+      }
+      dir.close();
+      return 1;           
+    }    
+  }     
 }
 
 // **************************************************************************************
@@ -867,6 +1067,7 @@ void loop() {
 
        if(data == CMD_READ)  comando_read();      
   else if(data == CMD_WRITE) comando_write();      
+  else if(data == CMD_LOAD)  comando_load();      
   else if(data == CMD_DEL)   comando_del();    
   else if(data == CMD_RMDIR) comando_rmdir();    
   else if(data == CMD_MKDIR) comando_mkdir();     

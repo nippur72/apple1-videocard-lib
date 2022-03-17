@@ -121,6 +121,16 @@ void send_string_to_MCU(char *msg) {
    }
 }
 
+// receive a string sent by the MCU
+void receive_string_from_MCU(char *dest) {
+   while(1) {
+      byte data = receive_byte_from_MCU();
+      *dest++ = data;
+      if(TIMEOUT) break;
+      if(data == 0) break;  // string terminator
+   }
+}
+
 // print a string sent by the MCU
 void print_string_response() {
    while(1) {

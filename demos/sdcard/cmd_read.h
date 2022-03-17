@@ -50,7 +50,7 @@ void comando_read() {
    // print feedback to user
    woz_putc('\r');
    woz_puts(filename);
-   woz_puts(": ");
+   woz_putc('\r');
    woz_print_hexword(start_address);
    woz_putc('.');
    woz_print_hexword((word)token_ptr);
