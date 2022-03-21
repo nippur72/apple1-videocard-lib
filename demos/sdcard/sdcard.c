@@ -69,6 +69,7 @@ __address(14) word len;
 __address(16) byte hex_to_word_ok;
 __address(17) byte cmd;
 __address(18) byte *token_ptr;
+__address(20) word TIMEOUT_RANGE = 0;
 
 #define MCU_STROBE_HIGH 128
 #define MCU_STROBE_LOW  0
@@ -79,6 +80,7 @@ void wait_mcu_strobe(byte v) {
    TIMEOUT_CNT = 0;
    while(v ^ MCU_STROBE) {
       TIMEOUT_CNT++;
+      if(TIMEOUT_CNT > TIMEOUT_RANGE) TIMEOUT_RANGE = TIMEOUT_CNT;
       if(TIMEOUT_CNT > TIMEOUT_MAX) {
          TIMEOUT = 1;
          break;

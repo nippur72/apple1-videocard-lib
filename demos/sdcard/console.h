@@ -251,8 +251,11 @@ void console() {
             }
             TIMEOUT_MAX = tmpword;
          }
-         woz_puts("TIMEOUT_MAX: ");
+         woz_puts("TIMEOUT MAX:");
          woz_print_hexword(TIMEOUT_MAX);
+         woz_puts(" CURR:");
+         woz_print_hexword(TIMEOUT_RANGE);
+         TIMEOUT_RANGE = 0;
       }
       else if(cmd == CMD_LOAD || cmd == CMD_RUN) {
          get_token(filename, 32);  // parse filename
