@@ -46,7 +46,7 @@ RUN STARTREK
 
    Loads a file from the SD card. `filename` refers to a "tagged file name" described above. For convenience, `filename` can be partially given, the first matching file will be loaded.
    
-`SAVE filename start end`
+`SAVE filename [start] [end]`
 
    Saves a file to the SD card. If `start` and `end` are specified, a binary file with tag `#06` will be created with the memory content from the address range `start`-`end` (included).
    If `start` and `end` are not specified, the BASIC program currently loaded in memory will be created with the corresponding `#F1` tag.
