@@ -143,6 +143,7 @@ void print_string_response() {
    }
 }
 
+/*
 // print a string sent by the MCU, breakable via keyboard
 void print_string_response_brk() {
    byte print_on = 1;
@@ -157,6 +158,34 @@ void print_string_response_brk() {
       }      
    }
 }
+*/
+
+/*
+//
+void print_string_response_linebyline() {
+   byte paused = 0;
+   byte print_on = 1;
+   while(1) {
+      // ask for a line of text        
+      send_byte_to_MCU(OK_RESPONSE);
+      if(TIMEOUT) break;
+
+      // get MCU response byte
+      byte data = receive_byte_from_MCU();
+      if(TIMEOUT) break;
+      if(data == ERR_RESPONSE) break;  // no more lines of text
+
+      // next is a line of text as a string
+      print_string_response();
+      if(TIMEOUT) break;
+   
+      if(apple1_readkey()) {
+         woz_puts("*BRK*\r");         
+         print_on = 0;
+      }      
+   }
+}
+*/
 
 void receive_word_from_mcu() {   
    *((byte *)&tmpword)     = receive_byte_from_MCU();

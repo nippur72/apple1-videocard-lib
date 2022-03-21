@@ -180,7 +180,7 @@ void console() {
       // do not print extra newline for commands that do not have output (CD)
       if(cmd != CMD_CD) woz_putc('\r');                  
 
-      // performs a PWD     
+      // prints the current path before the prompt
       comando_pwd();        
       
       apple1_input_line_prompt(KEYBUF, KEYBUFLEN);

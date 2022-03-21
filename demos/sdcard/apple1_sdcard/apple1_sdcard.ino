@@ -245,6 +245,10 @@ const char *DIR_CREATED = " (DIR) CREATED";
 const char *CANT_CD_DIR = "?CAN'T CHANGE DIR";
 const char *NOT_A_DIRECTORY = "?NOT A DIRECTORY";
 
+// file structures used to operate with the SD card
+File myFile;
+File myDir;
+
 void setup() {
   // debug on serial
   Serial.begin(9600);  
@@ -285,76 +289,7 @@ void setup() {
 // **************************************************************************************
 // **************************************************************************************
 
-/*
-// recursive print directory
-void printDirectory(File dir, int numTabs) {
-  
-  while (true) {
-    if(TIMEOUT) break;
-
-    File entry =  dir.openNextFile();
-    if (! entry) {
-      // no more files
-      break;
-    }
-
-    // indentazione delle sottodirectory
-    for (uint8_t i = 0; i < numTabs; i++) {
-      Serial.print('\t');
-      send_byte_to_cpu(32);
-      send_byte_to_cpu(32);
-      send_byte_to_cpu(32);
-    }
-
-    // nome del file
-    char *msg;
-    entry.getName(filename, 64);
-    msg = filename;
-    
-    Serial.print(msg);    
-    for(int t=0; t<strlen(msg); t++) {
-      send_byte_to_cpu(msg[t]);
-    }
-    
-    if (entry.isDirectory()) {
-      Serial.println("/");
-      send_byte_to_cpu('/');
-      send_byte_to_cpu('\r');
-      printDirectory(entry, numTabs + 1);
-    } else {
-      // files have sizes, directories do not
-      Serial.print("\t\t");
-      send_byte_to_cpu(' ');
-      send_byte_to_cpu(' ');
-     
-      // file size
-      //Serial.println(entry.size(), DEC);
-      //msg = itoa(entry.size());
-      //for(int t=0; t<strlen(msg); t++) {
-      //  send_byte_to_cpu(msg[t]);
-      //}     
-      send_byte_to_cpu('\r');
-      
-    }
-    entry.close();
-  }
-}
-
-// versione ricorsiva (disabilitata)
-void comando_dir_alternate() {
-  Serial.println(F("command DIR received from CPU"));
-
-  File root = SD.open("/");
-  printDirectory(root, 0);
-  root.close();
-
-  // terminates
-  send_byte_to_cpu(0);
-  Serial.println(F("command DIR ended"));
-}
-*/
-
-// versione tipo MS-DOS
+int list_files;
 void comando_dir(int command) {
   Serial.println(F("command DIR received from CPU"));
 
@@ -362,127 +297,151 @@ void comando_dir(int command) {
   receive_string_from_cpu(filename);
   if(TIMEOUT) return;
   Serial.print(F("dir to read: "));
-  Serial.println(filename);
-
-  File dir;  
+  Serial.println(filename);  
   
   if(filename[0]==0) {
     // no argument given, use cd_path
     strcpy(filename, cd_path);    
   }
 
-  dir = SD.open(filename);
+  myDir = SD.open(filename);
 
-  if(!dir) {
+  if(!myDir) {
     Serial.println(F("dir not found"));    
+    send_byte_to_cpu(ERR_RESPONSE);
     send_string_to_cpu(DIR_NOT_FOUND);
     return;    
   }
 
-  // *** lists directories first  
-  print_dir_entry(dir, 0, command);  
-  if(TIMEOUT) return;
-  
-  // *** then files
-  dir.rewind();
-  print_dir_entry(dir, 1, command);
-  dir.close();
+  // dir opened OK
+  send_byte_to_cpu(OK_RESPONSE);
 
-  if(TIMEOUT) return;
+  list_files = 0;  // starts listing dirs (0) then files (1)
 
-  // terminates
-  send_byte_to_cpu(0);
-  Serial.println(F("command DIR ended"));
+  while(true) {
+    int c = receive_byte_from_cpu();
+    if(TIMEOUT) {
+      Serial.println(F("timeout while receiving 'next line' byte"));    
+      break; 
+    } else if(c == WAIT_RESPONSE) {
+      // do nothing, just keep listening
+      continue;   
+    } else if(c == ERR_RESPONSE) {
+      // user asked to abort dir listing
+      Serial.println(F("dir interrupted by the user"));
+      break;       
+    } else if(c == OK_RESPONSE) {
+      if(!send_next_dir_line(command)) {
+        Serial.println(F("dir terminated"));
+        break;
+      }
+    }
+  }
+  myDir.close();
 }
 
-void print_dir_entry(File dir, int list_files, int command) {
-  while (true) {    
-    File entry = dir.openNextFile();
+int send_next_dir_line(int command) {
+  // user wants a new line of dir listing
 
-    if(!entry) {
-      // no more files
-      break;
-    }
-
-    // send file size or directory
-    entry.getName(filename, 64);
-    strtoupper(filename);
+  while(1) {
+    myFile = myDir.openNextFile();
     
-    if((list_files == 0 && entry.isDirectory()) || (list_files == 1 && !entry.isDirectory())) {
-      if(entry.isDirectory()) {
-         if(command != CMD_DIR) {
-           sprintf(tmp, "(DIR) %s\r", filename);
-           print_string_to_cpu(tmp);
-           Serial.println(tmp);     
-         }  
-         else {
-           sprintf(tmp, "%-15s (DIR)\r", filename);
-           print_string_to_cpu(tmp);
-           Serial.println(tmp);     
-         }                
+    if(!myFile) {
+      if(list_files==0) {
+        list_files++;
+        myDir.rewind();
+        continue;
       }
       else {
-        if(command != CMD_DIR) {
-           // BUG the following line does not work
-           // sprintf(tmp, "%5d %s", entry.size(), filename);        
-           // use this instead
-           sprintf(tmp, "%5d ", entry.size());
-           print_string_to_cpu(tmp);
-           Serial.print(tmp);       
-
-           print_string_to_cpu(filename);                
-           Serial.println(filename);               
-
-           send_byte_to_cpu('\r');           
-        }
-        else {
-                               
-           char type[5];
-           char address[5];      
-           
-           strcpy(type,"");
-           strcpy(address, ""); 
-
-           char *x = strchr(filename, '#');
-           if(x != NULL) {
-              *x++ = 0;              
-              if(x[0]=='0' && x[1]=='6') {
-                 strcpy(type,"BIN ");
-                 strcpy(address,x+2);  
-              }
-              else if(x[0]=='F' && x[1]=='1') {
-                 strcpy(type,"BAS ");
-                 strcpy(address,x+2);  
-              }        
-              else {
-                 strcpy(type,"??? ");
-              }
-           }
-                                 
-           sprintf(tmp, "%-15s", filename);
-           print_string_to_cpu(tmp);                              
-           Serial.print(filename);               
-
-           sprintf(tmp, "%6d ", entry.size());
-           print_string_to_cpu(tmp);
-           Serial.print(tmp);
-
-           print_string_to_cpu(type);
-           Serial.print(type);
-                
-           print_string_to_cpu(address);
-           Serial.println(address);
-
-           send_byte_to_cpu('\r');
-        }
-      }      
-      if(TIMEOUT) break;          
+        // no more lines to send       
+        myDir.close(); 
+        send_byte_to_cpu(ERR_RESPONSE);   
+        return 0; // no more lines
+      }
     }
-    entry.close();
+
+    if(myFile.isDirectory() && list_files == 0) break;
+    if(!myFile.isDirectory() && list_files == 1) break;
   }
-  dir.close();
+  
+  // send the text line 
+  send_byte_to_cpu(OK_RESPONSE);    
+  send_directory_entry(command);                  
+  myFile.close(); 
+  return 1; // more lines to send
 }
 
+void send_directory_entry(int command) {
+  myFile.getName(filename, 64);
+  strtoupper(filename);
+    
+  if(myFile.isDirectory()) {
+    if(command != CMD_DIR) {
+      sprintf(tmp, "(DIR) %s\r", filename);
+      print_string_to_cpu(tmp);
+      Serial.println(tmp);     
+    }  
+    else {
+      sprintf(tmp, "%-15s (DIR)\r", filename);
+      print_string_to_cpu(tmp);
+      Serial.println(tmp);     
+    }                
+  }
+  else {
+    if(command != CMD_DIR) {
+      // BUG the following line does not work
+      // sprintf(tmp, "%5d %s", entry.size(), filename);        
+      // use this instead
+      sprintf(tmp, "%5d ", myFile.size());
+      print_string_to_cpu(tmp);
+      Serial.print(tmp);       
+
+      print_string_to_cpu(filename);                
+      Serial.println(filename);               
+
+      send_byte_to_cpu('\r');           
+    }
+    else {                            
+      char type[5];
+      char address[5];      
+      
+      strcpy(type,"");
+      strcpy(address, ""); 
+
+      char *x = strchr(filename, '#');
+      if(x != NULL) {
+        *x++ = 0;              
+        if(x[0]=='0' && x[1]=='6') {
+            strcpy(type,"BIN ");
+            strcpy(address,x+2);  
+        }
+        else if(x[0]=='F' && x[1]=='1') {
+            strcpy(type,"BAS ");
+            strcpy(address,x+2);  
+        }        
+        else {
+            strcpy(type,"??? ");
+        }
+      }
+                            
+      sprintf(tmp, "%-15s", filename);
+      print_string_to_cpu(tmp);                              
+      Serial.print(filename);               
+
+      sprintf(tmp, "%6d ", myFile.size());
+      print_string_to_cpu(tmp);
+      Serial.print(tmp);
+
+      print_string_to_cpu(type);
+      Serial.print(type);
+          
+      print_string_to_cpu(address);
+      Serial.println(address);
+
+      send_byte_to_cpu('\r');
+    }
+  }          
+}
 
 // **************************************************************************************
 // **************************************************************************************
@@ -507,7 +466,7 @@ void comando_read() {
   }
 
   // open the file 
-  File myFile = SD.open(filename);
+  myFile = SD.open(filename);
   if(!myFile) {            
     Serial.println(F("error opening file"));
     send_byte_to_cpu(ERR_RESPONSE);
@@ -603,7 +562,7 @@ void comando_write() {
   }
 
   // open the file 
-  File myFile = SD.open(filename, FILE_WRITE);
+  myFile = SD.open(filename, FILE_WRITE);
   if(!myFile) {            
     Serial.println(F("error opening file for write"));
     send_byte_to_cpu(ERR_RESPONSE);
@@ -679,7 +638,7 @@ void comando_load() {
   }
 
   // open the file 
-  File myFile = SD.open(filename);
+  myFile = SD.open(filename);
   if(!myFile) {            
     Serial.println(F("error opening file"));
     send_byte_to_cpu(ERR_RESPONSE);
@@ -769,50 +728,72 @@ int matchname(char *filename, char *dest) {
   else                     Serial.println(F("scanning the file_path directory"));
 
   // open the directory containing the file
-  File dir = SD.open(strlen(file_path)==0 ? cd_path : file_path);
+  myDir = SD.open(strlen(file_path)==0 ? cd_path : file_path);
 
-  if(!dir) return 0;
+  if(!myDir) return 0;
 
   Serial.println(F("dir opened"));
 
-  // scan all the directory
-  while(1) {
+  // scans twice: scanmode=0 for exact match, scanmode=1 for partial match
+  for(int scanmode=0;scanmode<=1;scanmode++) {
+    if(scanmode==0) Serial.println(F("scanning for exact match..."));
+    if(scanmode==1) Serial.println(F("scanning for partial match..."));
+   
+    // scan all the directory
+    while(1) {
 
-    send_byte_to_cpu(WAIT_RESPONSE);
-    if(TIMEOUT) return 0;        
-    
-    File F = dir.openNextFile();
-    
-    // end of directory
-    if(!F) {
-      dir.close();
-      return 0;      
-    }
-
-    // copy filename in dest and closes it
-    F.getName(dest, 64);
-    strtoupper(dest);
-    F.close();
-
-    Serial.println(F("file entry:"));
-    Serial.println(dest);
-
-    // verify the match
-    if(strncmp(file_name, dest, strlen(filename))==0) {
-      Serial.println(F("it is matching!"));
-      // matching, dest already contains the matched file name
-
-      // if file_path is empty then it's current directory, do nothing
-      // else file_path needs to be combined with file name
-      if(file_path[0]!=0) {
-        Serial.println(F("not on current dir, joining paths"));
-        strcpy(filename, dest);
-        if(file_path[0]=='/' && file_path[1]==0)  sprintf(dest,"/%s", filename);              // case of root folder
-        else                                      sprintf(dest,"%s/%s", file_path, filename); // case of normal nested folder
+      send_byte_to_cpu(WAIT_RESPONSE);
+      if(TIMEOUT) return 0;        
+      
+      myFile = myDir.openNextFile();
+      
+      // end of directory
+      if(!myFile) {
+        if(scanmode == 0) {
+          // exact match not found, rewind the directory and scan fot partial match
+          myDir.rewind();
+          break;
+        }
+        else if(scanmode == 1) {
+          // match not found even with partial match, return error
+          myDir.close();
+          return 0;      
+        }
       }
-      dir.close();
-      return 1;           
-    }    
+
+      // copy filename in dest and closes it
+      myFile.getName(dest, 64);
+      strtoupper(dest);
+      myFile.close();
+
+      Serial.print(F("file entry: "));
+      Serial.println(dest);
+
+      // verify the match
+      int len = strlen(filename);
+      bool match_found = strncmp(file_name, dest, len) == 0;
+
+      // enforce exact match
+      if(scanmode == 0) match_found = match_found && dest[strlen(filename)] == '#';
+
+      if(match_found) {
+        if(scanmode==0) Serial.println(F("found an exact match"));
+        if(scanmode==1) Serial.println(F("found a partial match"));
+
+        // matching, dest already contains the matched file name
+
+        // if file_path is empty then it's current directory, do nothing
+        // else file_path needs to be combined with file name
+        if(file_path[0]!=0) {
+          Serial.println(F("not on current dir, joining paths"));
+          strcpy(filename, dest);
+          if(file_path[0]=='/' && file_path[1]==0)  sprintf(dest,"/%s", filename);              // case of root folder
+          else                                      sprintf(dest,"%s/%s", file_path, filename); // case of normal nested folder
+        }
+        myDir.close();
+        return 1;           
+      }    
+    }
   }     
 }
 
@@ -840,7 +821,7 @@ void comando_del() {
   if(TIMEOUT) return;
 
   // open the file for deletion
-  File myFile = SD.open(filename, FILE_WRITE);
+  myFile = SD.open(filename, FILE_WRITE);
   if(!myFile) {            
     Serial.println(F("error opening file for deletion"));    
     send_string_to_cpu(CANT_DELETE_FILE);
@@ -1026,7 +1007,7 @@ void comando_cd() {
     return;
   }
   
-  File myFile = SD.open(filename);
+  myFile = SD.open(filename);
   bool isDir = myFile.isDirectory();
   myFile.close();
   
