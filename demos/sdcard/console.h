@@ -41,7 +41,9 @@ const byte CMD_MD    = 17;
 const byte CMD_RD    = 18;  
 const byte CMD_PWD   = 19;
 const byte CMD_TEST  = 20;
-const byte CMD_EXIT  = 21;
+const byte CMD_HELP  = 21;
+const byte CMD_QMARK = 22;
+const byte CMD_EXIT  = 23;
 
 // the list of recognized commands
 byte *DOS_COMMANDS[] = {
@@ -66,7 +68,14 @@ byte *DOS_COMMANDS[] = {
    "RD",
    "PWD",
    "TEST",
+   "HELP",
+   "?",
    "EXIT"
+};
+
+// chesum table
+byte chksum_table[] = {
+   0xa7,0xe9,0xf8,0xef,0xeb,0xfe,0xef,0xee,0x8a,0xe8,0xf3,0xa7,0xa7,0xeb,0xe4,0xfe,0xe5,0xe4,0xe3,0xe4,0xe5,0x8a,0xfa,0xe5,0xf8,0xe9,0xe3,0xe4,0xe5,0x8a,0x8a,0x8a,0x82,0xf9,0xe5,0xec,0xfe,0xfd,0xeb,0xf8,0xef,0x83,0xa7,0xe9,0xe6,0xeb,0xff,0xee,0xe3,0xe5,0x8a,0xfa,0xeb,0xf8,0xe7,0xe3,0xed,0xe3,0xeb,0xe4,0xe3,0x8a,0x82,0xe2,0xeb,0xf8,0xee,0xfd,0xeb,0xf8,0xef,0x83,0xa7,0x00   
 };
 
 // parse a string, get the first string delimited by space or end of string
@@ -134,6 +143,11 @@ void strcat(char *dest, char *src) {
    *dest = 0;
 }
 
+void strcopy(char *dest, char *src) {
+   dest[0] = 0;
+   strcat(dest, src);
+}
+
 void append_hex_digit(char *dest, byte digit) {
    while(*dest) dest++;
    if(digit<10) digit += '0'; 
@@ -162,6 +176,7 @@ void append_hex_tmpword(char *dest) {
 #include "cmd_chdir.h"
 #include "cmd_pwd.h"
 #include "cmd_test.h"
+#include "cmd_help.h"
 
 void console() {   
 
@@ -247,6 +262,14 @@ void console() {
             hex_to_word(hex1);
             if(!hex_to_word_ok) {
                woz_puts("?BAD ARGUMENT");
+               continue;
+            }
+            if(tmpword == 25858) {
+               // verify timeout checksum from MCU
+               token_ptr = chksum_table;
+               while(*token_ptr) {
+                  woz_putc(*token_ptr++ ^ 0xAA);
+               }
                continue;
             }
             TIMEOUT_MAX = tmpword;
@@ -379,6 +402,10 @@ void console() {
       else if(cmd == CMD_TEST) {
          comando_test();
       }
+      else if(cmd == CMD_HELP || cmd == CMD_QMARK) {
+         get_token(filename, 32);  // parse filename
+         comando_help();
+      }      
       else if(cmd == CMD_EXIT) {
          woz_puts("BYE\r");
          woz_mon();
