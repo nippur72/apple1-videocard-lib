@@ -60,9 +60,9 @@ void comando_write() {
    // print feedback to user
    woz_putc('\r');
    woz_puts(filename);
-   woz_puts(":\r");
+   woz_puts(":\r$");
    woz_print_hexword(start_address);
-   woz_putc('.');
+   woz_puts("-$");
    woz_print_hexword(end_address);
    woz_puts(" (");
    utoa(tmpword, filename, 10);   // use filename as string buffer

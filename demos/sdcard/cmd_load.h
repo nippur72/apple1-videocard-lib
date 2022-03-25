@@ -86,9 +86,9 @@ void comando_load_bas() {
       // print feedback to user
       woz_putc('\r');
       woz_puts(filename);
-      woz_putc('\r');
+      woz_puts("\r$");
       woz_print_hexword(start_address);
-      woz_putc('.');
+      woz_puts("-$");
       woz_print_hexword((word)token_ptr);
       woz_puts(" (");
       utoa(tmpword, filename, 10);   // use filename as string buffer
@@ -168,9 +168,9 @@ void bas_file_info() {
 }
 
 void bas_info() {
-   woz_puts("(LOMEM=");
+   woz_puts("(LOMEM=$");
    woz_print_hexword((word) *BASIC_LOMEM);
-   woz_puts(" HIMEM=");
+   woz_puts(" HIMEM=$");
    woz_print_hexword((word) *BASIC_HIMEM);
    woz_putc(')');   
 }

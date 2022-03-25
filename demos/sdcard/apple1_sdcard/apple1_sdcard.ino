@@ -412,11 +412,11 @@ void send_directory_entry(int command) {
       if(x != NULL) {
         *x++ = 0;              
         if(x[0]=='0' && x[1]=='6') {
-            strcpy(type,"BIN ");
+            strcpy(type,"BIN $");
             strcpy(address,x+2);  
         }
         else if(x[0]=='F' && x[1]=='1') {
-            strcpy(type,"BAS ");
+            strcpy(type,"BAS $");
             strcpy(address,x+2);  
         }        
         else {

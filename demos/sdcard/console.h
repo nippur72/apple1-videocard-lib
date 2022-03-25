@@ -251,9 +251,9 @@ void console() {
             }
             TIMEOUT_MAX = tmpword;
          }
-         woz_puts("TIMEOUT MAX:");
+         woz_puts("TIMEOUT MAX: $");
          woz_print_hexword(TIMEOUT_MAX);
-         woz_puts(" CURR:");
+         woz_puts(" CURR: $");
          woz_print_hexword(TIMEOUT_RANGE);
          TIMEOUT_RANGE = 0;
       }
