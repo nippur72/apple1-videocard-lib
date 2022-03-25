@@ -56,7 +56,6 @@ SdFat SD;
 
 #define SD_CS_PIN SS
 
-
 // pin definitions
 
 #define BIT0 2   
@@ -74,9 +73,9 @@ SdFat SD;
 #define CPU_STROBE  15   
 
 // indicates that a timeout occurred during wait_cpu_strobe()
-int TIMEOUT = 0;
+byte TIMEOUT = 0;
 
-void wait_cpu_strobe(int value) {
+void wait_cpu_strobe(byte value) {
     
   unsigned long start_time = millis();  
   unsigned long elapsed;  
@@ -92,12 +91,12 @@ void wait_cpu_strobe(int value) {
   }
 }
 
-const int DIR_INPUT  = 0;
-const int DIR_OUTPUT = 1;
+const byte DIR_INPUT  = 0;
+const byte DIR_OUTPUT = 1;
 
-int last_dir; // remember last data port pins direction 
+byte last_dir; // remember last data port pins direction 
 
-void set_data_port_direction(int dir) {
+void set_data_port_direction(byte dir) {
 
   // check if no need to set pins
   if(dir == last_dir) return;
@@ -127,7 +126,7 @@ void set_data_port_direction(int dir) {
   last_dir = dir;
 }
 
-int receive_byte_from_cpu() {
+byte receive_byte_from_cpu() {
 
   // set data port pins as INPUT pins
   set_data_port_direction(DIR_INPUT);
@@ -139,9 +138,9 @@ int receive_byte_from_cpu() {
   
   // read the data byte
   #ifdef FASTWRITE  
-  int data = ((PORTB & 0x03)<<6) | (PORTD >> 2);  // data = { PORTB[1:0], PORTD[7:2] }
+  byte data = ((PORTB & 0x03)<<6) | (PORTD >> 2);  // data = { PORTB[1:0], PORTD[7:2] }
   #else
-  int data = 
+  byte data = 
     (digitalRead(BIT0) << 0) |
     (digitalRead(BIT1) << 1) |
     (digitalRead(BIT2) << 2) |
@@ -164,7 +163,7 @@ int receive_byte_from_cpu() {
   return data;
 }
 
-void send_byte_to_cpu(int data) {
+void send_byte_to_cpu(byte data) {
 
   // set data port pins as OUTPUT pins
   set_data_port_direction(DIR_OUTPUT);
@@ -208,24 +207,25 @@ void send_byte_to_cpu(int data) {
 // *********************************************************************************************
 // *********************************************************************************************
 
-const int CMD_READ  =  0;
-const int CMD_WRITE =  1;
-const int CMD_DIR   =  2;
-const int CMD_LOAD  =  4;
-const int CMD_DEL   = 11;
-const int CMD_LS    = 12;
-const int CMD_CD    = 13;
-const int CMD_MKDIR = 14;
-const int CMD_PWD   = 19;
-const int CMD_RMDIR = 15;
-const int CMD_TEST  = 20;
+const byte CMD_READ  =  0;
+const byte CMD_WRITE =  1;
+const byte CMD_DIR   =  2;
+const byte CMD_LOAD  =  4;
+const byte CMD_DEL   = 11;
+const byte CMD_LS    = 12;
+const byte CMD_CD    = 13;
+const byte CMD_MKDIR = 14;
+const byte CMD_PWD   = 19;
+const byte CMD_RMDIR = 15;
+const byte CMD_TEST  = 20;
 
-const int ERR_RESPONSE  = 255;
-const int WAIT_RESPONSE =   1;
-const int OK_RESPONSE   =   0;
+const byte ERR_RESPONSE  = 255;
+const byte WAIT_RESPONSE =   1;
+const byte OK_RESPONSE   =   0;
 
+// @buffer
 char filename[64]; 
-char tmp[64];
+char tmp[32];
 char cd_path[64]; 
 
 // fixed messages
@@ -289,8 +289,8 @@ void setup() {
 // **************************************************************************************
 // **************************************************************************************
 
-int list_files;
-void comando_dir(int command) {
+byte list_files;
+void comando_dir(byte command) {
   Serial.println(F("command DIR received from CPU"));
 
   // reads filename as 0 terminated string
@@ -319,7 +319,7 @@ void comando_dir(int command) {
   list_files = 0;  // starts listing dirs (0) then files (1)
 
   while(true) {
-    int c = receive_byte_from_cpu();
+    byte c = receive_byte_from_cpu();
     if(TIMEOUT) {
       Serial.println(F("timeout while receiving 'next line' byte"));    
       break; 
@@ -340,7 +340,7 @@ void comando_dir(int command) {
   myDir.close();
 }
 
-int send_next_dir_line(int command) {
+byte send_next_dir_line(byte command) {
   // user wants a new line of dir listing
 
   while(1) {
@@ -371,7 +371,7 @@ int send_next_dir_line(int command) {
   return 1; // more lines to send
 }
 
-void send_directory_entry(int command) {
+void send_directory_entry(byte command) {
   myFile.getName(filename, 64);
   strtoupper(filename);
     
@@ -412,11 +412,11 @@ void send_directory_entry(int command) {
       if(x != NULL) {
         *x++ = 0;              
         if(x[0]=='0' && x[1]=='6') {
-            strcpy(type,"BIN $");
+            strcpy(type,"BIN ");
             strcpy(address,x+2);  
         }
         else if(x[0]=='F' && x[1]=='1') {
-            strcpy(type,"BAS $");
+            strcpy(type,"BAS ");
             strcpy(address,x+2);  
         }        
         else {
@@ -434,8 +434,12 @@ void send_directory_entry(int command) {
 
       print_string_to_cpu(type);
       Serial.print(type);
-          
-      print_string_to_cpu(address);
+
+      if(type[0]!=0) {
+        send_byte_to_cpu('$');  
+        Serial.print("$");      
+      }
+      print_string_to_cpu(address);     
       Serial.println(address);
 
       send_byte_to_cpu('\r');
@@ -505,7 +509,7 @@ void comando_read() {
 
 void send_string_to_cpu(char *msg) {
   while(1) {
-    int c = *msg++;
+    byte c = *msg++;
     send_byte_to_cpu(c);
     if(TIMEOUT) break;
     if(c==0) break;
@@ -515,7 +519,7 @@ void send_string_to_cpu(char *msg) {
 // come send_string_to_cpu ma senza lo zero finale
 void print_string_to_cpu(char *msg) {
   while(1) {
-    int c = *msg++;
+    byte c = *msg++;
     if(c==0) break;
     send_byte_to_cpu(c);
     if(TIMEOUT) break;    
@@ -525,7 +529,7 @@ void print_string_to_cpu(char *msg) {
 
 void receive_string_from_cpu(char *msg) {
   while(1) {
-    int c = receive_byte_from_cpu();
+    byte c = receive_byte_from_cpu();
     if(TIMEOUT) break;    
     *msg++ = c;
     if(c==0) break;
@@ -539,8 +543,8 @@ void receive_string_from_cpu(char *msg) {
 // **************************************************************************************
 
 int receive_word_from_cpu() {
-  int lo = receive_byte_from_cpu();
-  int hi = receive_byte_from_cpu();
+  byte lo = receive_byte_from_cpu();
+  byte hi = receive_byte_from_cpu();
   int data = lo | (hi << 8);  
   return data;
 }
@@ -582,9 +586,9 @@ void comando_write() {
   Serial.print(F("received file size: "));
   Serial.println(size);
 
-  int error = 0;
+  byte error = 0;
   for(int t=0;t<size;t++) {
-    int data = receive_byte_from_cpu();
+    byte data = receive_byte_from_cpu();
     if(TIMEOUT) break;
     int n = myFile.write((unsigned char)data);
     if(n!=1) error = 1;
@@ -692,8 +696,9 @@ void strtoupper(char *str){
 //      "pluto" => "", "pluto"
 //      "/pluto" => "/", "pluto"
 
+// @buffer
 char file_path[64];
-char file_name[64];
+char file_name[32];
 
 void split_path(char *filename) {
   strcpy(file_path, filename);
@@ -715,7 +720,7 @@ void split_path(char *filename) {
 // returns 1 if matching file is found
 // returns 0 if no matching file is found
 //
-int matchname(char *filename, char *dest) {
+byte matchname(char *filename, char *dest) {
   // split filename into file_path and file_name
   split_path(filename);
 
@@ -735,7 +740,7 @@ int matchname(char *filename, char *dest) {
   Serial.println(F("dir opened"));
 
   // scans twice: scanmode=0 for exact match, scanmode=1 for partial match
-  for(int scanmode=0;scanmode<=1;scanmode++) {
+  for(byte scanmode=0;scanmode<=1;scanmode++) {
     if(scanmode==0) Serial.println(F("scanning for exact match..."));
     if(scanmode==1) Serial.println(F("scanning for partial match..."));
    
@@ -949,7 +954,7 @@ void comando_cd() {
   if(filename[0] == '.' && filename[1] == '.' && filename[2] == 0) {  
     strcpy(filename, cd_path);
     for(int t=strlen(filename)-1;t>=1;t--) {
-      int c = filename[t];
+      byte c = filename[t];
       filename[t] = 0;
       if(c == '/') break;        
     }
@@ -1041,7 +1046,7 @@ void comando_pwd() {
 void loop() {  
   TIMEOUT = 0;
 
-  int data = receive_byte_from_cpu();
+  byte data = receive_byte_from_cpu();
   if(TIMEOUT) return;
 
   unsigned long start_time = millis();
@@ -1058,7 +1063,7 @@ void loop() {
   else if(data == CMD_LS)    comando_dir(data);
   else if(data == CMD_TEST) {
     while(!TIMEOUT) {
-      int data = receive_byte_from_cpu();
+      byte data = receive_byte_from_cpu();
       send_byte_to_cpu(data ^ 0xFF);
     }
   }
