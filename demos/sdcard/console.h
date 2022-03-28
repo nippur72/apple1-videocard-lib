@@ -43,7 +43,8 @@ const byte CMD_PWD   = 19;
 const byte CMD_TEST  = 20;
 const byte CMD_HELP  = 21;
 const byte CMD_QMARK = 22;
-const byte CMD_EXIT  = 23;
+const byte CMD_MOUNT = 23;
+const byte CMD_EXIT  = 24;
 
 // the list of recognized commands
 byte *DOS_COMMANDS[] = {
@@ -70,6 +71,7 @@ byte *DOS_COMMANDS[] = {
    "TEST",
    "HELP",
    "?",
+   "MOUNT",
    "EXIT"
 };
 
@@ -177,12 +179,13 @@ void append_hex_tmpword(char *dest) {
 #include "cmd_pwd.h"
 #include "cmd_test.h"
 #include "cmd_help.h"
+#include "cmd_mount.h"
 
 void console() {   
 
    VIA_init();
 
-   woz_puts("\r\r*** SD CARD OS 1.0\r\r");
+   woz_puts("\r\r*** SD CARD OS 1.1\r\r");
 
    cmd = 0;
 
@@ -406,6 +409,9 @@ void console() {
          get_token(filename, 32);  // parse filename
          comando_help();
       }      
+      else if(cmd == CMD_MOUNT) {
+         comando_mount();
+      }
       else if(cmd == CMD_EXIT) {
          woz_puts("BYE\r");
          woz_mon();

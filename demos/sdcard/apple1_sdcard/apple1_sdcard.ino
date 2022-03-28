@@ -36,6 +36,7 @@ in Verilog syntax: data = { PORTB[1:0], PORTD[7:2] };
 
 */
 
+// FASTWRITE not working (yet)
 // #define FASTWRITE 1
 
 #ifdef FASTWRITE
@@ -45,9 +46,6 @@ in Verilog syntax: data = { PORTB[1:0], PORTD[7:2] };
 #define get_cpu_strobe digitalRead(CPU_STROBE)
 #define set_mcu_strobe(c) digitalWrite(MCU_STROBE,(c))
 #endif
-
-
-// #include <Regexp.h>
 
 #include <SPI.h>
 #include "SdFat.h"
@@ -218,6 +216,7 @@ const byte CMD_MKDIR = 14;
 const byte CMD_PWD   = 19;
 const byte CMD_RMDIR = 15;
 const byte CMD_TEST  = 20;
+const byte CMD_MOUNT = 21;
 
 const byte ERR_RESPONSE  = 255;
 const byte WAIT_RESPONSE =   1;
@@ -244,6 +243,8 @@ const char *CANT_MAKE_DIR = "?CAN'T MAKE DIR";
 const char *DIR_CREATED = " (DIR) CREATED";
 const char *CANT_CD_DIR = "?CAN'T CHANGE DIR";
 const char *NOT_A_DIRECTORY = "?NOT A DIRECTORY";
+const char *MOUNT_OK = "MOUNTING SDCARD...\rOK";
+const char *MOUNT_FAILED = "?SD CARD ERROR";
 
 // file structures used to operate with the SD card
 File myFile;
@@ -254,9 +255,7 @@ void setup() {
   Serial.begin(9600);  
   Serial.println(F("SDCARD library: SDFat.h"));
 
-  // initialize SD card
-  if (!SD.begin(SD_CS_PIN)) Serial.println(F("SD card initialization failed"));    
-  else                      Serial.println(F("SD card initialized"));
+  mount_sdcard();
   
   // control pins setup
   pinMode(CPU_STROBE, INPUT);
@@ -267,21 +266,21 @@ void setup() {
   last_dir = -1;  // no previous data direction  
   set_data_port_direction(DIR_INPUT);
 
-  /*
-  // regex disabled for now
-  MatchState ms;
-  char buf [100] = { "The quick " };
-  ms.Target (buf);
-  char result = ms.Match ("f.x");
-  if(result >0) {
-    Serial.println("match!");  
-  }
-  */
-
   // set working directory to root
   strcpy(cd_path, "/");
 }
 
+bool mount_sdcard() {
+  // initialize SD card
+  if(!SD.begin(SD_CS_PIN)) {
+    Serial.println(F("SD card initialization failed"));
+    return false;
+  }
+  else {
+    Serial.println(F("SD card initialized"));
+    return true;
+  }
+}
 
 // **************************************************************************************
 // **************************************************************************************
@@ -1066,6 +1065,11 @@ void loop() {
       byte data = receive_byte_from_cpu();
       send_byte_to_cpu(data ^ 0xFF);
     }
+  }
+  else if(data == CMD_MOUNT) {
+    bool mount = mount_sdcard();
+    if(mount) send_string_to_cpu(MOUNT_OK);
+    else send_string_to_cpu(MOUNT_FAILED);
   }
   else {
     Serial.print(F("unknown command "));
