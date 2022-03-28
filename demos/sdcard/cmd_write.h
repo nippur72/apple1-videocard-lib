@@ -42,10 +42,6 @@ void comando_write() {
    for(word t=0;t<tmpword;t++) {
       send_byte_to_MCU(*token_ptr++);
       if(TIMEOUT) return;
-
-      #ifdef LOADING_DOTS
-      if(((byte)t) == 0) woz_putc('.');
-      #endif
    }
 
    // get second response

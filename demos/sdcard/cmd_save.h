@@ -66,10 +66,6 @@ void comando_save_bas() {
    for(token_ptr=*BASIC_LOMEM; token_ptr<(byte *)tmpword; token_ptr++) {
       send_byte_to_MCU(*token_ptr);
       if(TIMEOUT) return;
-
-      #ifdef LOADING_DOTS
-      if(((byte)token_ptr) == 0) woz_putc('.');
-      #endif
    }
 
    // get second response

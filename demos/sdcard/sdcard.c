@@ -197,8 +197,6 @@ void send_word_to_mcu() {
    send_byte_to_MCU( *((byte *)(&tmpword+1)) );
 }
 
-// #define LOADING_DOTS 0
-
 #include "console.h"
 
 void main() {

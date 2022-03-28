@@ -74,10 +74,6 @@ void comando_load_bas() {
          byte data = receive_byte_from_MCU();
          if(TIMEOUT) return;
          *token_ptr++ = data;
-
-         #ifdef LOADING_DOTS
-         if(((byte)t) == 0) woz_putc('.');
-         #endif
       }
 
       // decrease by one for display result
@@ -142,9 +138,6 @@ void comando_load_bas() {
       }
       
       token_ptr++;
-      #ifdef LOADING_DOTS
-      if(((byte)t) == 0) woz_putc('.');
-      #endif
    }
 
    bas_file_info();
