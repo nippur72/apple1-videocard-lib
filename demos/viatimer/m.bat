@@ -1,2 +1,3 @@
-@call ..\..\tools\build viatimer
+rem @call ..\..\tools\build viatimer
+@call ..\..\tools\build viaclock
 
