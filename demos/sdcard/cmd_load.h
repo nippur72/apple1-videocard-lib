@@ -41,13 +41,14 @@ void comando_load_bas() {
       if(*token_ptr == '#') {
          if(token_ptr[1] == '0' && token_ptr[2] == '6') { filetype = 0x06; break; }
          if(token_ptr[1] == 'F' && token_ptr[2] == '1') { filetype = 0xF1; break; }
+         if(token_ptr[1] == 'F' && token_ptr[2] == '8') { filetype = 0xF8; break; }
       }
       if(*token_ptr == 0) break;
       token_ptr++;
    }
 
    // calculate start address for 0x06 binary file
-   if(filetype == 0x06) {
+   if(filetype == 0x06 || filetype == 0xF8) {
       token_ptr+=2;
       hex_to_word(token_ptr);
       start_address = tmpword;
@@ -57,7 +58,7 @@ void comando_load_bas() {
    receive_word_from_mcu();
    if(TIMEOUT) return;
 
-   if(filetype != 0x06 && filetype != 0xF1) {
+   if(filetype == 0) {
       woz_puts("?INVALID FILE NAME TAG #");
       for(word t=0;t!=tmpword;t++) receive_byte_from_MCU(); // empty buffer
       return;
@@ -99,6 +100,49 @@ void comando_load_bas() {
             jmp (tmpword)
          }
       }
+
+      return;
+   }
+
+   if(filetype == 0xF8) {
+      // 0xF8 APPLESOFT BASIC LITE
+
+      *TXTTAB = start_address;
+
+      // get file bytes
+      token_ptr = (byte *) start_address;
+      for(word t=0;t!=tmpword;t++) {
+         byte data = receive_byte_from_MCU();
+         if(TIMEOUT) return;
+         *token_ptr++ = data;
+      }
+
+      *VARTAB = (word) token_ptr;
+      *PRGEND = (word) token_ptr;
+
+      // decrease by one for display result
+      token_ptr--;
+
+      // print feedback to user
+      woz_putc('\r');
+      woz_puts(filename);
+      woz_puts("\r$");
+      woz_print_hexword(start_address);
+      woz_puts("-$");
+      woz_print_hexword((word)token_ptr);
+      woz_puts(" (");
+      utoa(tmpword, filename, 10);   // use filename as string buffer
+      woz_puts(filename);
+      woz_puts(" BYTES)\rOK");
+
+      // executes machine language program at start address
+      //if(cmd == CMD_RUN) {
+      //   woz_putc('\r');
+      //   tmpword = start_address;
+      //   asm {
+      //      jmp (tmpword)
+      //   }
+      //}
 
       return;
    }
