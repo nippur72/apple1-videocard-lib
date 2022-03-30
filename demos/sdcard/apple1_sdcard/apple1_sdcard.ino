@@ -418,8 +418,15 @@ void send_directory_entry(byte command) {
             strcpy(type,"BAS ");
             strcpy(address,x+2);  
         }        
+        else if(x[0]=='F' && x[1]=='8') {
+            strcpy(type,"ASB ");
+            strcpy(address,x+2);
+        }
         else {
-            strcpy(type,"??? ");
+            type[0] = '#';
+            type[1] = x[0];
+            type[2] = x[1];
+            strcpy(address,x+2);
         }
       }
                             
