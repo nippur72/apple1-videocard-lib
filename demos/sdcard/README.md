@@ -12,12 +12,14 @@ indicates the file type (two characters) and the hex loading address (4 characte
 
 `#06` for plain binary files
 `#F1` for BASIC programs
+`#F8` for Applesoft BASIC lite programs
 
 E.g.:
 `BASIC#06E000` is binary file named `BASIC` that loads at address `$E000`.
 `STARTREK#F10300` is a BASIC program named `STARTREK` that loads at address `$0300`.
+`LEMO#F80801` is a AppleSoft BASIC program named `LEMO` that loads at address `$0801`.
 
-Tagged file names are used by the `LOAD`, `RUN`, `SAVE` and `DIR` commands to simplify working with files. For example to execute the above files, it's enough to type:
+Tagged file names are used by the `LOAD`, `RUN`, `SAVE`, `ASAVE` and `DIR` commands to simplify working with files. For example to execute the above files, it's enough to type:
 
 ```
 LOAD BASIC
@@ -50,6 +52,10 @@ RUN STARTREK
 
    Saves a file to the SD card. If `start` and `end` are specified, a binary file with tag `#06` will be created with the memory content from the address range `start`-`end` (included).
    If `start` and `end` are not specified, the BASIC program currently loaded in memory will be created with the corresponding `#F1` tag.
+
+`ASAVE filename`
+
+   Saves a AppleSoft BASIC lite file to the SD card. The program currently loaded in memory will be created with the corresponding `#F8` tag.
 
 `RUN filename`
 
@@ -87,9 +93,14 @@ RUN STARTREK
 
    Prints `LOMEM` and `HIMEM` pointers from the BASIC program currently loaded in memory.
 
-`JMP address`
+`address R`
 
-   Makes the CPU jump at the specified address.
+   Runs the program loaded at the specified memory address. Useful addresses:
+   `6000R` AppleSoft BASIC cold start (needed at least once)
+   `6003R` AppleSoft BASIC warm start (do not destroy the BASIC program in RAM)
+   `E000R` Integer BASIC cold start
+   `EFECR` Integer BASIC "RUN" command (can be used as a warm entry point)
+   `8000R` SD card OS command prompt
 
 `TIME value`
 
