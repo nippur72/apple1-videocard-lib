@@ -216,7 +216,7 @@ const byte CMD_MKDIR = 14;
 const byte CMD_PWD   = 19;
 const byte CMD_RMDIR = 15;
 const byte CMD_TEST  = 20;
-const byte CMD_MOUNT = 21;
+const byte CMD_MOUNT = 23;
 
 const byte ERR_RESPONSE  = 255;
 const byte WAIT_RESPONSE =   1;
