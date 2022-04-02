@@ -781,11 +781,11 @@ byte matchname(char *filename, char *dest) {
       Serial.println(dest);
 
       // verify the match
-      int len = strlen(filename);
+      int len = strlen(file_name);
       bool match_found = strncmp(file_name, dest, len) == 0;
 
       // enforce exact match
-      if(scanmode == 0) match_found = match_found && dest[strlen(filename)] == '#';
+      if(scanmode == 0) match_found = match_found && dest[strlen(file_name)] == '#';
 
       if(match_found) {
         if(scanmode==0) Serial.println(F("found an exact match"));
@@ -800,6 +800,9 @@ byte matchname(char *filename, char *dest) {
           strcpy(filename, dest);
           if(file_path[0]=='/' && file_path[1]==0)  sprintf(dest,"/%s", filename);              // case of root folder
           else                                      sprintf(dest,"%s/%s", file_path, filename); // case of normal nested folder
+          //Serial.println(filename);
+          //Serial.println(file_path);
+          //Serial.println(dest);
         }
         myDir.close();
         return 1;           
