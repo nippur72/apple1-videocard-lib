@@ -16,12 +16,12 @@ void comando_help() {
       }
    }
 
-   // builds the name of the help file   
-   strcpy((char *)KEYBUFSTART, "/HELP/");
-   strcat((char *)KEYBUFSTART, filename);
-   strcat((char *)KEYBUFSTART, ".TXT");
+   // builds the name of the help file using the input buffer as buffer
+   strcpy(KEYBUF, "/HELP/");
+   strcat(KEYBUF, filename);
+   strcat(KEYBUF, ".TXT");
 
-   strcpy(filename, (char *)KEYBUFSTART);
+   strcpy(filename, KEYBUF);
 
    comando_type();
 }

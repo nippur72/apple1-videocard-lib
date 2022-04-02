@@ -3,17 +3,18 @@
 
 byte **const BASIC_LOMEM = (byte **) 0x004a;   // lomem pointer used by integer BASIC
 byte **const BASIC_HIMEM = (byte **) 0x004c;   // himem pointer used by integer BASIC
-byte  *const KEYBUF      = (byte  *) 0x0200;   // use the same keyboard buffer as in WOZ monitor
+
 
 #define KEYBUFSTART (0x200)
 #define KEYBUFLEN   (79)
 
 // keyboard buffer 0x200-27F uses only the first 40 bytes, the rest is recycled for free mem
 
-byte *const command  = (byte *) (KEYBUFSTART+KEYBUFLEN       ); // [6]  stores a 5 character command
-byte *const filename = (byte *) (KEYBUFSTART+KEYBUFLEN+6     ); // [33] stores a filename or pattern
-byte *const hex1     = (byte *) (KEYBUFSTART+KEYBUFLEN+6+33  ); // [5]  stores a hex parameter
-byte *const hex2     = (byte *) (KEYBUFSTART+KEYBUFLEN+6+33+5); // [5]  stores a hex parameter
+byte *const filename = (byte *) (KEYBUFSTART                 ); // $0200-$021F [33] stores a filename or pattern
+byte *const KEYBUF   = (byte *) 0x0220;                         // $0220-$026F [80] keyboard input
+byte *const hex1     = (byte *) (KEYBUFSTART+33+KEYBUFLEN    ); // $0270-$0274 [5]  stores a hex parameter
+byte *const hex2     = (byte *) (KEYBUFSTART+33+KEYBUFLEN+5  ); // $0275-$0279 [5]  stores a hex parameter
+byte *const command  = (byte *) (KEYBUFSTART+33+KEYBUFLEN+5+5); // $027A-$027F [6]  stores a 5 character command
 
 const byte OK_RESPONSE   = 0x00;
 const byte WAIT_RESPONSE = 0x01;
