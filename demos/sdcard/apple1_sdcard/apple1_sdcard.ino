@@ -228,6 +228,7 @@ char tmp[32];
 char cd_path[64]; 
 
 // fixed messages
+const char *NOT_A_FILE = "?NOT A FILE";
 const char *FILE_NOT_FOUND = "?FILE NOT FOUND";
 const char *CANT_OPEN_FILE = "?CAN'T OPEN FILE";
 const char *ALREADY_EXISTS = "?FILE ALREADY EXISTS";
@@ -482,7 +483,16 @@ void comando_read() {
     send_byte_to_cpu(ERR_RESPONSE);
     send_string_to_cpu(CANT_OPEN_FILE);
     return;
-  }  
+  }
+
+  if(myFile.isDirectory()) {
+    myFile.close();
+    Serial.println(F("not a file"));
+    send_byte_to_cpu(ERR_RESPONSE);
+    send_string_to_cpu(NOT_A_FILE);
+    return;
+  }
+
   Serial.println(F("file opened on the SD card"));
 
   // ok response
@@ -654,7 +664,16 @@ void comando_load() {
     send_byte_to_cpu(ERR_RESPONSE);
     send_string_to_cpu(CANT_OPEN_FILE);
     return;
-  }  
+  }
+
+  if(myFile.isDirectory()) {
+    myFile.close();
+    Serial.println(F("not a file"));
+    send_byte_to_cpu(ERR_RESPONSE);
+    send_string_to_cpu(NOT_A_FILE);
+    return;
+  }
+
   Serial.println(F("file opened on the SD card"));
 
   // ok response
