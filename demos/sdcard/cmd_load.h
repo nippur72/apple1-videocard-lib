@@ -7,6 +7,7 @@
 // global cmd
 
 void comando_load_bas() {
+   VIA_init();  // needed when called from Applesoft basic after a RESET
 
    // send command byte
    send_byte_to_MCU(CMD_LOAD);

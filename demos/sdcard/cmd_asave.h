@@ -5,6 +5,8 @@ word const *VARTAB = (word *) 0x0069;
 word const *PRGEND = (word *) 0x00AF;
 
 void comando_asave() {
+   VIA_init();  // needed when called from Applesoft basic after a RESET
+
    woz_puts("SAVING\r");
 
    // appends #F8 + start address (normally: "0801")
