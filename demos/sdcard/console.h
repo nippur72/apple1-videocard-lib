@@ -187,7 +187,7 @@ void console() {
 
    VIA_init();
 
-   woz_puts("\r\r*** SD CARD OS 1.1\r\r");
+   woz_puts("\r\r*** SD CARD OS 1.2\r\r");
 
    cmd = 0;
 
