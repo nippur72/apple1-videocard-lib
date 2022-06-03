@@ -99,6 +99,7 @@ RUN STARTREK
    `6000R` AppleSoft BASIC cold start (needed at least once)
    `6003R` AppleSoft BASIC warm start (do not destroy the BASIC program in RAM)
    `E000R` Integer BASIC cold start
+   `E2B3R` Integer BASIC warm start
    `EFECR` Integer BASIC "RUN" command (can be used as a warm entry point)
    `8000R` SD card OS command prompt
 
