@@ -14,6 +14,7 @@ void comando_test() {
 
       drec = receive_byte_from_MCU();
       drec ^= 0xff;
+      if(TIMEOUT) return;
 
       if(drec != dsend) {
          woz_puts("\rTRANSFER ERROR\r");
@@ -22,8 +23,4 @@ void comando_test() {
       dsend++;
       if(dsend == 0x00) woz_putc('*');
    }
-}
-
-void test_via() {
-   
 }
