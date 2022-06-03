@@ -45,7 +45,7 @@ const byte CMD_TEST  = 20;
 const byte CMD_HELP  = 21;
 const byte CMD_QMARK = 22;
 const byte CMD_MOUNT = 23;
-const byte CMD_EXIT  = 25;
+const byte CMD_EXIT  = 24;
 
 // the list of recognized commands
 byte *DOS_COMMANDS[] = {
