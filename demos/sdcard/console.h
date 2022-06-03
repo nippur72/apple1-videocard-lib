@@ -436,6 +436,7 @@ void console() {
       if(TIMEOUT) {
          woz_puts("?I/O ERROR");
          TIMEOUT = 0;
+         VIA_init();
       }
    }
 }
