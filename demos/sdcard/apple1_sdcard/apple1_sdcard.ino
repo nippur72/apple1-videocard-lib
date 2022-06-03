@@ -224,7 +224,7 @@ const byte OK_RESPONSE   =   0;
 
 // @buffer
 char filename[64]; 
-char tmp[32];
+char tmp[64];
 char cd_path[64]; 
 
 // fixed messages
@@ -721,11 +721,7 @@ void strtoupper(char *str){
 //      "pluto" => "", "pluto"
 //      "/pluto" => "/", "pluto"
 
-// @buffer
-char file_path[64];
-char file_name[32];
-
-void split_path(char *filename) {
+void split_path(char *filename, char *file_path, char *file_name) {
   strcpy(file_path, filename);
   
   for(int t=strlen(file_path)-1;t>0;t--) {
@@ -746,8 +742,12 @@ void split_path(char *filename) {
 // returns 0 if no matching file is found
 //
 byte matchname(char *filename, char *dest) {
+  // @buffer
+  char file_path[64];
+  char file_name[64];
+
   // split filename into file_path and file_name
-  split_path(filename);
+  split_path(filename, file_path, file_name);
 
   Serial.print(F("after split file_path="));
   Serial.print(file_path);
