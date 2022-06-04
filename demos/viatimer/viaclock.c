@@ -113,12 +113,12 @@ void detect_machine_type() {
    if(*ptr1 == *ptr2) {
       // genuine Apple1
       ONE_TICK = 15996;  // timer constant for 1/60 second calculated as 14318180/14*61/65/60      
-      woz_puts("GENUINE APPLE1");
+      woz_puts("APPLE-1");
    }
    else {
       // Replica-1
       ONE_TICK = 16667;  // timer constant for 1/60 second calculated as 5000000/5/60
-      woz_puts("APPLE1 REPLICA-1");
+      woz_puts("REPLICA-1");
    }
 
    woz_puts("\r\r");   
