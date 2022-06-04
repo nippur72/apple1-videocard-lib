@@ -117,7 +117,7 @@ void detect_machine_type() {
    }
    else {
       // Replica-1
-      ONE_TICK = 17045;  // timer constant for 1/60 second calculated as 14318180/14/60      
+      ONE_TICK = 16667;  // timer constant for 1/60 second calculated as 5000000/5/60
       woz_puts("APPLE1 REPLICA-1");
    }
 
