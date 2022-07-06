@@ -29,4 +29,6 @@ packets*.wav
 !demos/picshow/release/*.bin
 !demos/picshow/release/*.prg
 !demos/picshow/release/*.woz
+!demos/anagram/out/anagram.woz
+!demos/anagram/out/hangman.woz
 
