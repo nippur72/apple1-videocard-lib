@@ -1,5 +1,5 @@
 @set JAVAEXE="c:\Program Files\Java\jdk1.8.0_161\bin\java.exe"
-@set JAVAEXE="C:\Program Files\Java\jre1.8.0_311\bin\java.exe"
+rem @set JAVAEXE="C:\Program Files\Java\jre1.8.0_311\bin\java.exe"
 
 @set KICKASSJAR="C:\Users\Nino1\Desktop\USB\Retro stuff 2\KickAssembler\KickAss.jar"
 
