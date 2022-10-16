@@ -35,7 +35,7 @@ EXPORT __interrupt(hardware_all) void time_interrupt_handler() {
          _seconds = 0;
          if(++_minutes == 60) {
             _minutes = 0;
-            _hours++;
+            if(++_hours == 24) _hours = 0;
          }
       }
    }

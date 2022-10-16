@@ -133,10 +133,18 @@ void main() {
 
    woz_puts("\rWHAT TIME IS IT ?\r");
 
-   woz_puts("\r(HOURS  ) "); apple1_input_line_prompt(KEYBUF, 2);
-   _hours = (byte) atoi(KEYBUF);
-   woz_puts("\r(MINUTES) "); apple1_input_line_prompt(KEYBUF, 2);
-   _minutes = (byte) atoi(KEYBUF);
+   do {
+      woz_puts("\r(HOURS  ) ");
+      apple1_input_line_prompt(KEYBUF, 2);
+      _hours = (byte) atoi(KEYBUF);
+   } while(_hours > 23);
+
+   do {
+      woz_puts("\r(MINUTES) ");
+      apple1_input_line_prompt(KEYBUF, 2);
+      _minutes = (byte) atoi(KEYBUF);
+   } while(_minutes > 59);
+
    _seconds = 0;
 
    enable_timer_interrupt();
