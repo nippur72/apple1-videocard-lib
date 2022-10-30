@@ -363,17 +363,21 @@ L2167     STA (PTR1),Y
 L2179:
    DB $A0 ; unused byte
 
+;
 ; $2180
-; welcome message
+; welcome message in Woz-ascii code
+;
 MESSAGE:
-   DB $A0,$A0,$A0,$A0,$A0,$A0,$8D,$8D
-   DB $8D,$8D,$C3,$CF,$CE,$D7,$C1,$D9
-   DB $A7,$D3,$A0,$C7,$C1,$CD,$C5,$A0
-   DB $CF,$C6,$A0,$CC,$C9,$C6,$C5,$8D
-   DB $8D,$D0,$CC,$C5,$C1,$D3,$C5,$A0
-   DB $D4,$D9,$D0,$C5,$A0,$D9,$CF,$D5
-   DB $D2,$A0,$C6,$D5,$CC,$CC,$A0,$CE
-   DB $C1,$CD,$C5,$AE,$8D,$8D,$00             
+   DB $A0,$A0,$A0,$A0,$A0,$A0              ; "      "
+   DB $8D,$8D,$8D,$8D                      ; "\n\n\n\n"
+   DB $C3,$CF,$CE,$D7,$C1,$D9,$A7,$D3,$A0  ; "CONWAY'S "
+   DB $C7,$C1,$CD,$C5,$A0                  ; "GAME "
+   DB $CF,$C6,$A0,$CC,$C9,$C6,$C5,$8D,$8D  ; "OF LIFE\n\n"
+   DB $D0,$CC,$C5,$C1,$D3,$C5,$A0          ; "PLEASE "
+   DB $D4,$D9,$D0,$C5,$A0                  ; "TYPE "
+   DB $D9,$CF,$D5,$D2,$A0                  ; "YOUR "
+   DB $C6,$D5,$CC,$CC,$A0                  ; "FULL "
+   DB $CE,$C1,$CD,$C5,$AE,$8D,$8D,$00      ; "NAME.\n\n"
 
-// $21B9
+; $21B9
                             
