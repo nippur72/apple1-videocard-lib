@@ -382,7 +382,7 @@ MESSAGE:
    DB $D4,$D9,$D0,$C5,$A0                  ; "TYPE "
    DB $D9,$CF,$D5,$D2,$A0                  ; "YOUR "
    DB $C6,$D5,$CC,$CC,$A0                  ; "FULL "
-   DB $CE,$C1,$CD,$C5,$AE,$8D,$8D,$00      ; "NAME.\n\n"
+   DB $CE,$C1,$CD,$C5,$AE,$8D,$8D          ; "NAME.\n\n"
 
 ; $21B9
                             
