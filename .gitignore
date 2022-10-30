@@ -33,4 +33,4 @@ packets*.wav
 !demos/anagram/out/hangman.woz
 !demos/anagram/out/anagram.prg
 !demos/anagram/out/hangman.prg
-
+!demos/life-src/life-src.asm
