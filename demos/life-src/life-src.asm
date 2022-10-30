@@ -64,10 +64,15 @@ L2013     LDA MESSAGE,X
           CPX #56      ; prints 56 characters of the message
           BNE L2013
 
+; Asks for user's full name; read and print from keyboard
+; until ENTER is pressed. Typed characters are simply discarded,
+; the purpose of asking user's full name is to increment the random
+; seed generator in $FA-$FB (RND) at user's typing speed.
 ;
-; read and print from keyboard until ENTER is pressed.
-; Typed characters are simply discarded, the purpose 
-; is to increment the random seed in $FA-FB (RND variable)
+; At the end of the typing, the RND variable will contain
+; a fairly good random integer that can be used as a
+; seed generator. This because the Apple-1 does not have
+; any other way of generating random numbers
 ;
 
 L201E     JSR RDKEY
