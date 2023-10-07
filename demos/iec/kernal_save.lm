@@ -1,0 +1,60 @@
+SAVE 
+        LDA #$61       ; "OPEN" COMMAND CHANNEL 1
+        STA SA
+        LDY FNLEN
+        BNE SV25
+        ;
+        JMP ERROR8     ;MISSING FILE NAME
+        ;
+SV25    JSR OPENI
+        JSR SAVING
+        LDA FA
+        JSR LISTN
+        LDA SA
+        JSR SECND
+        LDY #0
+        JSR RD300
+        LDA SAL
+        JSR CIOUT
+        LDA SAH
+        JSR CIOUT
+SV30    JSR CMPSTE      ;COMPARE START TO END
+        BCS SV50        ;HAVE REACHED END
+        LDA (SAL),Y
+        JSR CIOUT
+        ;JSR STOP
+        ;BNE SV40
+        ;
+        ;BREAK   JSR CLSEI
+        ;        LDA    #0
+        ;        SEC
+        ;        RTS
+        ;
+SV40    JSR INCSAL      ;INCREMENT CURRENT ADDR.
+        BNE SV30
+SV50    JSR UNLSN
+        JSR CLSEI
+        ;
+        JMP CUNLSN
+        ;
+RD300   LDA STAH        ; RESTORE STARTING ADDRESS...
+        STA SAH         ;...POINTERS (SAH & SAL)
+        LDA STAL
+        STA SAL
+        RTS
+
+;COMPARE START AND END LOAD/SAVE
+;ADDRESSES.  SUBROUTINE CALLED BY
+;TAPE READ, SAVE, TAPE WRITE
+;
+CMPSTE  SEC
+        LDA SAL
+        SBC EAL
+        LDA SAH
+        SBC EAH
+        RTS
+;
+INCSAL  INC SAL
+        BNE INCR
+        INC SAH
+INCR    RTS

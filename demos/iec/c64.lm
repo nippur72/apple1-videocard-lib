@@ -1,0 +1,68 @@
+    processor 6502
+
+; Kernal entries 
+
+const GETIN   = $ffe4     ; getin rom kernel routine
+const CLRSCN  = $e544     ; clear screen
+const PRNSTR  = $ab1e     ; print string in A/Y, 0 terminated
+const GOHOME  = $e566     ; go home
+const PRNINT  = $bdcd     ; print integer in A/X
+
+; zero page
+
+const cursor_ptr = 209
+const jiffy_clock = 162
+const CRSRCOL = 646
+
+; registers
+
+; color costants
+
+const color_black   = 0
+const color_white   = 1
+const color_red     = 2
+const color_cyan    = 3
+const color_magenta = 4
+const color_green   = 5
+const color_blue    = 6
+const color_yellow  = 7
+
+; screen costants
+
+const SCREEN_COLS  = 40
+const SCREEN_ROWS  = 25
+const VIDEO_MEMORY = 1024
+const COLOR_MEMORY = 55296
+const COLOR_PAGE_OFFSET = ((color_memory - VIDEO_MEMORY) / 256)
+const BASIC_RAM   = 2049
+const RASTER      = $d012
+const ROMCHAR     = 32768
+
+; useful macros
+    
+    macro cls
+       jsr CLRSCN
+    end macro	 
+    
+    mac print
+       lda #[[{1}_pos]%256]
+       sta cursor_ptr
+       lda #[[{1}_pos]/256]
+       sta cursor_ptr+1 
+       lda #[{1}%256]
+       ldy #[{1}/256]
+       jsr my_print          
+    endm 
+       
+    macro waitkey
+        pha 
+        txa : pha
+        tya : pha
+.lab1        
+        jsr GETIN
+        cmp #0
+        beq .lab1
+        pla : tay   
+        pla : tax
+        pla      
+    end macro

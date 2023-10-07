@@ -1,0 +1,39 @@
+basic start
+   100 print "{wht}saving file"
+   110 sys {save_file}   
+   120 GOSUB 2000:rem stampa ST
+   130 gosub 1000:rem read file with basic
+   140 gosub 200:rem read file with lm
+   150 end   
+
+   200 rem =============================
+   205 print "loading file at $2000"
+   210 sys {load_file}
+   220 print "load ok"
+   230 l={file_content_end}-{file_content_start}
+   240 for t=0 to l-1
+   250 poke 1024+t,peek(8192+t)
+   260 next
+   270 return
+
+  1000 rem ========================
+  1005 REM reads the file "prova"
+  1006 print "reading back file"
+  1007 C=0
+  1010 OPEN 1,8,2,"prova"
+  1020 IF ST<>0 THEN GOTO 1050
+  1030 GET#1,A$:IF A$="" THEN A$=CHR$(0)
+  1040 PRINT A$;:C=C+1:GOTO 1020
+  1050 PRINT:GOSUB 2000
+  1055 PRINT "bytes=";C
+  1060 CLOSE 1
+  1070 RETURN
+
+  2000 PRINT "st=";ST;
+  2001 IF (ST AND 2)<>0 THEN PRINT "timeout ";
+  2010 IF (ST AND 16)<>0 THEN PRINT "verify error";
+  2020 IF (ST AND 64)<>0 THEN PRINT "eof ";
+  2030 IF (ST AND 128)<>0 THEN PRINT "device not present ";
+  2035 PRINT
+  2040 RETURN
+basic end

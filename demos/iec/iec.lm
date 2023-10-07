@@ -1,0 +1,110 @@
+   processor 6502
+
+   #ifdef C64   then include "c64.lm"
+   #ifdef C64   then org 2049
+      
+   #ifdef APPLE1 then include "apple1.lm"
+   #ifdef APPLE1 then org $280
+
+   include "macros.lm"
+   include "macros_16.lm"
+
+dim ptr as word at 254       ; useful zero page pointer   
+
+#ifdef C64
+basic start
+   10 sys {main}
+basic end
+#endif
+
+main:
+   PRINTMSG #MSG_OK
+
+   call save_file
+   PRINTMSG #MSG_OK
+
+   ; clears file content at absolute address
+   ld16 ptr, #file_content
+   lda #88   ;'X'
+   for y=#0 to #15
+      sta (ptr),y
+   next
+
+   ; clears file content at relative address
+   ld16 ptr, #relative_buffer
+   lda #88   ;'X'
+   for y=#0 to #15
+      sta (ptr),y
+   next
+
+   ; do not perform VERIFY when loading
+   ld VERCK, #0
+
+   ; prints file content loaded at relative address
+   PRINTMSG #MSG_RELATIVE_IS
+   PRINTMSG #relative_buffer
+   PRINTMSG #MSG_ABSOLUTE_IS
+   PRINTMSG #file_content
+
+   call load_file_relative
+   PRINTMSG #MSG_OK
+   call load_file_absolute
+   PRINTMSG #MSG_OK
+
+   ; prints file content loaded at relative address
+   PRINTMSG #MSG_RELATIVE_IS
+   PRINTMSG #relative_buffer
+   PRINTMSG #MSG_ABSOLUTE_IS
+   PRINTMSG #file_content
+   rts
+
+save_file: 
+   JSR InitPia
+   ld16 FNADR, #file_name_test
+   call CalcFileNameLength   
+   ld16 STAL, #file_content
+   ld16 EAL,  #file_content_end
+   ld FA, #8
+   ld SA, #1   
+   call SAVE
+   rts
+
+load_file_relative:
+   JSR InitPia
+   ld16 FNADR, #file_name_test
+   call CalcFileNameLength   
+   ld16 MEMUSS, #relative_buffer
+   ld FA, #8
+   ld SA, #0   
+   call LOAD
+   rts
+
+load_file_absolute:
+   JSR InitPia
+   ld16 FNADR, #file_name_test
+   call CalcFileNameLength   
+   ld FA, #8
+   ld SA, #1   
+   call LOAD
+   rts
+
+include "kernal.lm"
+
+#ifdef APPLE1 then include "apple1_code.lm"
+
+file_name_test:
+   byte "prova",0
+
+file_content: 
+   byte "0123456789ABCDEF"
+file_content_end:
+   byte 13,0                                  ; filler that allows print as string
+
+relative_buffer:
+   byte "----------------"
+relative_buffer_end:
+   byte 13,0                                  ; filler that allows print as string
+
+MSG_OK:          byte "OK", 13, 13, 0
+MSG_RELATIVE_IS: byte "RELATIVE IS: ",0
+MSG_ABSOLUTE_IS: byte "ABSOLUTE IS: ",0

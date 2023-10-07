@@ -1,0 +1,174 @@
+; Adapted from https://commodore.international/kim-iec/kim1541_public.asm
+
+; zero page locations
+STATUS = $90            ;I/O OPERATION STATUS BYTE
+C3P0   = $94            ;IEEE BUFFERED CHAR FLAG
+BSOUR  = $95            ;CHAR BUFFER FOR IEEE
+R2D2   = $A3            ;SERIAL BUS USAGE
+BSOUR1 = $A4            ;TEMP USED BY SERIAL ROUTINE
+COUNT  = $A5            ;TEMP USED BY SERIAL ROUTINE
+FNLEN  = $B7            ;FILENAME LENGTH
+FNADR  = $BB            ;FILENAME ADDRESS
+FA     = $BA            ;FILE PRIMARY ADDRESS
+SA     = $B9            ;FILE SECONDARY ADDRESS
+STAL   = $AA            ;SAVE END ADDR LOW BYTE FOR SAVE ROUTINE
+STAH   = $AB            ;SAVE END ADDR HIGH BYTE FOR SAVE ROUTINE
+SAL    = $AC            ;START ADDR LOW BYTE FOR SAVE ROUTINE
+SAH    = $AD            ;START ADDR HIGH BYTE FOR SAVE ROUTINE
+EAL    = $AE            ;END ADDRESS LOW BYTE
+EAH    = $AF            ;END ADDRESS HIGH BYTE
+MEMUSS = $C3            ;USER SPECIFIED FILE LOAD ADDRESS
+VERCK  = $0A            ;LOAD OR VERIFY FLAG
+SPERR  = 16             ;VERIFY ERROR IN STATUS
+FNAME  = $27            ;FILENAME
+
+#ifdef C64
+   const D2PRA  = $DD00    ;CIA2 PERIPHERAL DATA REGISTER A ON C64
+   const D2DDRA = $DD02    ;CIA2 PERIPHERAL DATA DIR REGISTER A ON C64
+   const D1T2H  = $DC07    ;CIA1 TIMER B HIGH BYTE VALUE
+   const D1ICR  = $DC0D    ;CIA1 INTERRUPT CONTROL REGISTER
+   const D1CRB  = $DC0F    ;CIA1 CONTROL REGISTER TIMER B
+   const TIMRB	 = $19      ;6526 CRB ENABLE ONE-SHOT TB
+
+   const BIT_ATN_OUT  = %00001000    ; ($08) CIA2 at $DD00 Bit 3: ATN OUT
+   const BIT_CLK_OUT  = %00010000    ; ($10) CIA2 at $DD00 Bit 4: CLOCK OUT
+   const BIT_DATA_OUT = %00100000    ; ($20) CIA2 at $DD00 Bit 5: DATA OUT
+   const BIT_CLK_IN   = %01000000    ; ($40) CIA2 at $DD00 Bit 6: CLOCK IN
+   const BIT_DATA_IN  = %10000000    ; ($80) CIA2 at $DD00 Bit 7: DATA IN
+#endif
+
+#ifdef APPLE1
+   const D2PRA  = $A000    ;VIA PORT B ON APPLE1
+   const D2DDRA = $A002    ;VIA PORT B DATA DIRECTION REGISTER ON APPLE1
+   const D1ACR  = $A00B    ;VIA ACR ON APPLE1
+   const D2IFR  = $A00D    ;VIA IFR ON APPLE1
+   const D2T2H  = $A009    ;VIA TIMER 2 HIGH BYTE
+
+   const TIMRB  = #%01000000  ; FREE RUNNING T1 T2 ONESHOT D1 
+
+   const BIT_ATN_OUT  = %00000100    ; Bit 2: ATN OUT
+   const BIT_CLK_OUT  = %00001000    ; Bit 3: CLOCK OUT
+   const BIT_DATA_OUT = %00010000    ; Bit 4: DATA OUT
+   const BIT_CLK_IN   = %00100000    ; Bit 5: CLOCK IN
+   const BIT_DATA_IN  = %01000000    ; Bit 6: DATA IN
+#endif
+
+/*
+byte *const VIA_PORTB   = (byte *) 0xA000;  // port B register
+byte *const VIA_PORTA   = (byte *) 0xA001;  // port A register
+byte *const VIA_DDRB    = (byte *) 0xA002;  // port A data direction register
+byte *const VIA_DDRA    = (byte *) 0xA003;  // port B data direction register
+byte *const VIA_T1CL    = (byte *) 0xA004;  // 
+byte *const VIA_T1CH    = (byte *) 0xA005;  // 
+byte *const VIA_T1LL    = (byte *) 0xA006;  // 
+byte *const VIA_T1LH    = (byte *) 0xA007;  // 
+byte *const VIA_T2CL    = (byte *) 0xA008;  // 
+byte *const VIA_T2CH    = (byte *) 0xA009;  // 
+byte *const VIA_SR      = (byte *) 0xA00A;  // 
+byte *const VIA_ACR     = (byte *) 0xA00B;  // 
+byte *const VIA_PCR     = (byte *) 0xA00C;  // 
+byte *const VIA_IFR     = (byte *) 0xA00D;  // 
+byte *const VIA_IER     = (byte *) 0xA00E;  // 
+byte *const VIA_PORTANH = (byte *) 0xA00F;  // 
+*/
+
+const PRA_INIT_VALUE = $FF-BIT_ATN_OUT-BIT_CLK_OUT-BIT_DATA_OUT-BIT_CLK_IN-BIT_DATA_IN   ; all IEC bits to "0"
+const PRA_INIT_DIR   = $FF-BIT_CLK_IN-BIT_DATA_IN                                        ; CLK_IN AND DATA_IN "0", others "1"
+
+; make "ASL A" compatible with "ASL"
+MACRO ASL "A"
+   ASL
+END MACRO
+
+include "kernal_serial.lm"   
+include "kernal_load.lm"
+include "kernal_save.lm"
+
+MACRO PRINTMSG const
+   #ifdef APPLE1
+      LD16 ptr, #{1}
+      call print_string        
+   #endif
+   #ifdef C64
+      LD16 ptr, #{1}
+      call print_string        
+   #endif
+END MACRO
+
+LUKING:
+   PRINTMSG #MSG_SEARCHING
+   RTS
+
+LODING:
+   PRINTMSG #MSG_LOADING        
+   RTS
+        
+SAVING:
+   PRINTMSG #MSG_SAVING         
+   RTS
+
+ERROR8:
+   PRINTMSG #MSG_MISSING         
+   RTS
+
+ERROR4:
+   PRINTMSG #MSG_NOT_FOUND         
+   RTS
+
+ERROR5:
+   PRINTMSG #MSG_DEVICE_NP
+   RTS
+
+MSG_SEARCHING: BYTE "searching",13,0
+MSG_LOADING:   BYTE "loading",13,0
+MSG_SAVING:    BYTE "saving",13,0
+MSG_MISSING:   BYTE "?missing file name",13,0
+MSG_NOT_FOUND: BYTE "?file not found",13,0
+MSG_DEVICE_NP: BYTE "?device not present",13,0
+
+SUB print_string()
+   tya : pha
+   txa : pha
+   #ifdef APPLE1 
+      call woz_puts
+   #endif
+   #ifdef C64
+      lda ptr
+      ldy ptr+1
+      call PRNSTR
+   #endif
+   pla : tax
+   pla : tay
+END SUB
+
+SUB CalcFileNameLength()
+   LDY #$FF
+   DO
+      INY
+      LDA (FNADR),Y
+   LOOP WHILE NOT ZERO
+   STY FNLEN
+END SUB
+
+SUB InitPia()
+   CLD                 ; NO DECIMAL MODE
+   SEI                 ; NO INTERRUPTS
+
+   #ifdef C64
+      LD D2PRA, #PRA_INIT_VALUE    ;SETS ALL IEC BITS TO LOW ($07) (#%00000111)   
+      LD D2DDRA, #PRA_INIT_DIR     ;SET DATA DIRECTION FOR REGISTER A ($3f) (#%00111111)
+   #endif
+   
+   #ifdef APPLE1
+      LD D2PRA,  #PRA_INIT_VALUE   ;SETS ALL IEC BITS TO LOW 
+      LD D2DDRA, #PRA_INIT_DIR     ;SET DATA DIRECTION FOR REGISTER A 
+	   LD D1ACR,  #TIMRB            ;FREE RUNNING T1 T2 ONESHOT D1  (#%01000000)
+      lda #0
+      sta STATUS
+      sta C3P0      
+      sta BSOUR 
+      sta R2D2  
+      sta BSOUR1
+      ;sta COUNT      
+   #endif
+END SUB

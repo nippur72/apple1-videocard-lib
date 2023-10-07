@@ -1,0 +1,105 @@
+//
+// this is an example of reading a file with the high-level kernal routines
+//
+
+/*
+basic start    
+    5 POKE 36879,8:PRINT "{clr}{wht}";
+    6 REM the ReadFile() function does something like this:
+   10 LA=7680
+   20 OPEN 1,8,2,"iec"
+   30 IF ST<>0 THEN GOTO 60
+   40 GET#1,A$:IF A$="" THEN A$=CHR$(0)
+   50 POKE LA,ASC(A$):LA=LA+1:GOTO 30
+   60 CLOSE 1
+basic end
+*/
+
+basic start
+    5 POKE 36879,8:PRINT "{clr}{wht}";
+   10 print "{down}{down}{down}{down}{down}{down}{down}{down}{down}{down}disk drive test"
+   20 sys {main}
+basic end
+
+main:
+   call ReadFile
+   rts
+
+const SETNAM = $FFBD             ; Kernal Set Filename
+const SETLFS = $FFBA             ; Kernal Set Logical First and Secondary
+const ICHKIN = $FFC6             ; Kernal Set Input
+const READST = $FFB7             ; Kernal read status byte
+const ICHRIN = $FFCF             ; Kernal read a byte from file
+const ICLOSE = $FFC3             ; Kernal close
+const ICLRCH = $FFCC             ; Kernal clear channel
+
+#ifdef C64
+   const load_address = 1024
+#endif
+
+#ifdef VIC20
+   const load_address = 7680
+#endif
+
+sub ReadFile()
+   ld16 $ae, #load_address       ; destination buffer
+
+   LDA #fname_end-fname
+   LDX #<fname
+   LDY #>fname
+   JSR SETNAM   
+
+   LDA #$02      ; file number 2
+   LDX #$08      ; default to device 8
+   LDY #$02      ; secondary address 2
+   JSR $FFBA     ; call SETLFS
+   JSR $FFC0     ; call OPEN
+
+   ; check if the file could not be opened
+   if carry then 
+      jsr open_error        ; handle open error
+      jmp close             ; even if OPEN failed, the file has to be closed
+   end if
+
+   LDX #$02      ; filenumber 2
+   JSR ICHKIN    ; file 2 now used as input
+
+   LDY #$00                    ; keep y indexing at 0
+   do
+      JSR READST               ; read status byte
+      if not zero then exit do ; either EOF or read error
+      JSR ICHRIN               ; get a byte from file
+      STA ($AE),Y              ; write byte to memory
+      inc16 $ae                ; increment pointer
+   loop while not zero
+
+   AND #$40                    ; end of file?
+   if zero then jsr read_error
+        
+close:
+   LDA #$02      ; filenumber 2
+   JSR ICLOSE
+   JSR ICLRCH
+   RTS
+
+open_error:
+   ; Akkumulator contains BASIC error code
+   ; most likely errors:
+   ; A = $05 (DEVICE NOT PRESENT)
+   ;... error handling for open errors ...
+   lda #00
+   sta load_address
+   rts
+
+read_error:
+   ; for further information, the drive error channel has to be read
+   ;... error handling for read errors ...
+   lda #01
+   sta load_address
+   rts
+end sub
+        
+fname:  
+   byte "iec"
+fname_end:
+
